@@ -1,0 +1,19 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+application.mainClassName = 'easymark.Main'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'io.javalin:javalin:3.9.1'
+    implementation 'org.slf4j:slf4j-simple:1.7.30'  // Logger for Javalin
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
