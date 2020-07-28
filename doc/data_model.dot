@@ -1,0 +1,125 @@
+digraph G {
+    graph [pad=".2",nodesep=".85",ranksep=".5"]
+    fontname="monospace"
+	fontsize=16
+
+	node [
+    	fontname="monospace"
+		fontsize=16
+		shape="record"
+	]
+
+	edge [
+    	fontname="monospace"
+		fontsize=16
+	]
+
+
+
+	Database [
+		label="{\N
+		|<admins> admins\l
+		|<courses> courses\l
+		|<participants> participants\l
+		|<chapters> chapters\l
+		|<assignments> assignments\l
+		|<chapterResults> chapterResults\l
+		|<assignmentResults> assignmentResults\l
+		|<testRequests> testRequests\l
+		}"
+	]
+
+	Admin [
+		label="{\N
+		|<id> id\l
+		|<accessToken> accessToken\l
+		}"
+	]
+	
+	Course [
+		label="{\N
+		|<id> id\l
+		|name\l
+		|<adminId> adminId\l
+		}"
+	]
+
+	AccessToken [
+		label="{\N
+		|hash\l
+		|salt\l
+		}"
+	]
+
+	Participant [
+		label="{\N
+		|<id> id\l
+		|<courseId> courseId\l
+		|nameEnc\l
+		|<cat> cat\l
+		}"
+	]
+
+	Chapter [
+		label="{\N
+		|<id> id\l
+		|<courseId> courseId\l
+		|ordNum\l
+		|name\l
+		|description\l
+		|dueDate\l
+		|testRequired\l
+		|<assignments> assignments\l
+		}"
+	]
+
+	Assignment [
+		label="{\N
+		|<id> id\l
+		|name\l
+		|maxScore\l
+		}"
+	]
+
+	ChapterResult [
+		label="{\N
+		|<id> id\l
+		|<participantId> participantId\l
+		|<assignmentId> assignmentId\l
+		|hasCompletedTest\l
+		}"
+	]
+
+	AssignmentResult [
+		label="{\N
+		|<id> id\l
+		|<participantId> participantId\l
+		|<assignmentId> assignmentId\l
+		|score\l
+		|summary\l
+		}"
+	]
+
+	TestRequest [
+		label="{\N
+		|<id> id\l
+		|<participantId> participantId\l
+		|<chapterId> chapterId\l
+		}"
+	]
+
+
+
+	Database:admins -> Admin:n [arrowhead="crow"]
+	Database:courses -> Course:n [arrowhead="crow"]
+	Database:participants -> Participant:n [arrowhead="crow"]
+	Database:chapters -> Chapter:n [arrowhead="crow"]
+	Database:assignments -> Assignment:n [arrowhead="crow"]
+	Database:chapterResults -> ChapterResult:n [arrowhead="crow"]
+	Database:assignmentResults -> AssignmentResult:n [arrowhead="crow"]
+	Database:testRequests -> TestRequest:n [arrowhead="crow"]
+
+	Admin:accessToken -> AccessToken [arrowhead="none"]
+	
+	Participant:cat:w -> AccessToken [arrowhead="none"]
+}
