@@ -1,13 +1,23 @@
 package easymark;
 
+import easymark.database.*;
 import io.javalin.*;
 import io.javalin.plugin.rendering.*;
 import io.javalin.plugin.rendering.template.*;
 
+import java.io.*;
 import java.util.*;
 
 public class Main {
     public static void main(String[] args) {
+        try {
+            DBMS.load();
+        } catch (IOException e) {
+            System.out.println("Failed to load database");
+            e.printStackTrace();
+            System.exit(1);
+        }
+
         JavalinRenderer.register(JavalinPebble.INSTANCE, ".peb");
 
         Javalin app = Javalin.create();

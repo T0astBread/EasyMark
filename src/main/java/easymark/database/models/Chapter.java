@@ -1,4 +1,4 @@
-package easymark.models;
+package easymark.database.models;
 
 import java.time.*;
 import java.util.*;

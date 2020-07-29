@@ -1,4 +1,4 @@
-package easymark.models;
+package easymark.database.models;
 
 import java.util.*;
 
@@ -11,7 +11,7 @@ public class Database {
     private List<ChapterResult> chapterResults;
     private List<AssignmentResult> assignmentResults;
     private List<TestRequest> testRequests;
-    
+
     public Database() {
         this.admins = new ArrayList<>();
         this.courses = new ArrayList<>();

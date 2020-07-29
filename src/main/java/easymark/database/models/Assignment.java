@@ -1,4 +1,4 @@
-package easymark.models;
+package easymark.database.models;
 
 public class Assignment extends Entity {
     private String name;
