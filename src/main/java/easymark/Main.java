@@ -1,5 +1,6 @@
 package easymark;
 
+import easymark.cli.*;
 import easymark.database.*;
 import io.javalin.*;
 import io.javalin.plugin.rendering.*;
@@ -9,13 +10,25 @@ import java.io.*;
 import java.util.*;
 
 public class Main {
+    private static final int UNEXPECTED_ERROR = 1;
+    private static final int USER_ERROR = 2;
+
+
     public static void main(String[] args) {
+        final CommandLineArgs commandLineArgs;
+        try {
+            commandLineArgs = CLI.parse(args);
+        } catch (UserFriendlyException e) {
+            handleUserFriendlyException(e);
+            return;  // unreachable
+        }
+
         try {
             DBMS.load();
         } catch (IOException e) {
             System.out.println("Failed to load database");
             e.printStackTrace();
-            System.exit(1);
+            System.exit(UNEXPECTED_ERROR);
         }
 
         JavalinRenderer.register(JavalinPebble.INSTANCE, ".peb");
@@ -37,5 +50,11 @@ public class Main {
         });
 
         app.start(8080);
+    }
+
+    private static void handleUserFriendlyException(UserFriendlyException e) {
+        e.printStackTrace();
+        System.err.println(e.getMessage());
+        System.exit(USER_ERROR);
     }
 }
