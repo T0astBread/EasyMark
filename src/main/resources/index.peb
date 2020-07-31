@@ -1,0 +1,14 @@
+hello {{ role is null ? "unauthenticated" : role }}
+{% if role is null %}
+<form action="/login" method="post">
+    <label for="accessToken">Access Token:</label>
+    <input type="password" name="accessToken" id="accessToken"/>
+    <input type="hidden" name="csrfToken" value="{{ logInOutCsrfToken.getValue() }}"/>
+</form>
+{% else %}
+{% if role == "ADMIN" %}
+<br>
+<a href="/courses">Courses</a>
+{% endif %}
+{% include 'partials/logout.peb' %}
+{% endif %}

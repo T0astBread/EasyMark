@@ -1,12 +1,19 @@
 plugins {
     id 'java'
     id 'application'
+    id 'io.spring.dependency-management' version '1.0.9.RELEASE'
 }
 
 group 'org.example'
 version '1.0-SNAPSHOT'
 
 application.mainClassName = 'easymark.Main'
+
+dependencyManagement {
+    imports {
+        mavenBom 'org.springframework.security:spring-security-bom:5.3.3.RELEASE'
+    }
+}
 
 repositories {
     mavenCentral()
@@ -17,5 +24,11 @@ dependencies {
     implementation 'io.javalin:javalin:3.9.1'
     implementation 'org.slf4j:slf4j-simple:1.7.30'  // Logger for Javalin
     implementation 'io.pebbletemplates:pebble:3.1.2'
+    implementation "org.springframework.security:spring-security-web"
     testCompile group: 'junit', name: 'junit', version: '4.12'
+}
+
+task buildDatamodelDiagram(type: Exec) {
+    workingDir new File(rootDir, 'doc')
+    commandLine 'dot', '-Tsvg', 'data_model.dot', '-o', 'data_model.svg'
 }

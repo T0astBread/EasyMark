@@ -5,7 +5,7 @@ import java.util.*;
 public class Participant extends Entity {
     private UUID courseId;
     private String nameEnc;
-    private String cat;
+    private AccessToken cat;
 
     public UUID getCourseId() {
         return courseId;
@@ -23,11 +23,11 @@ public class Participant extends Entity {
         this.nameEnc = nameEnc;
     }
 
-    public String getCat() {
+    public AccessToken getCat() {
         return cat;
     }
 
-    public void setCat(String cat) {
+    public void setCat(AccessToken cat) {
         this.cat = cat;
     }
 }

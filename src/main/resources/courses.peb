@@ -1,0 +1,6 @@
+<ul>
+{% for course in courses %}
+    <li>{{ course.getName() }}</li>
+{% endfor %}
+</ul>
+{% include 'partials/logout.peb' %}

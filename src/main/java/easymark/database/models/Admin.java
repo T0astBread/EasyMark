@@ -1,9 +1,13 @@
 package easymark.database.models;
 
 public class Admin extends Entity {
-    private String accessToken;
+    private AccessToken accessToken;
 
-    public String getAccessToken() {
+    public AccessToken getAccessToken() {
         return accessToken;
+    }
+
+    public void setAccessToken(AccessToken accessToken) {
+        this.accessToken = accessToken;
     }
 }

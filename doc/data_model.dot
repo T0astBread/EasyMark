@@ -100,6 +100,13 @@ digraph G {
 		}"
 	]
 
+	AccessToken [
+		label="{\N
+		|identifier\l
+		|secret\l
+		}"
+	]
+
 
 
 	Database:admins -> Admin:n [arrowhead="crow"]
@@ -110,4 +117,7 @@ digraph G {
 	Database:chapterResults -> ChapterResult:n [arrowhead="crow"]
 	Database:assignmentResults -> AssignmentResult:n [arrowhead="crow"]
 	Database:testRequests -> TestRequest:n [arrowhead="crow"]
+
+	Admin:accessToken -> AccessToken [arrowhead="none"]
+	Participant:cat -> AccessToken [arrowhead="none"]
 }
