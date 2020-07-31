@@ -1,12 +1,10 @@
 package easymark;
 
 import easymark.cli.*;
-import easymark.cryptography.*;
 import easymark.database.*;
 import easymark.database.models.*;
 import easymark.webserver.*;
 import io.javalin.*;
-import org.springframework.security.crypto.encrypt.*;
 
 import java.io.*;
 
@@ -42,12 +40,11 @@ public class Main {
             AccessToken adminAccessToken = Cryptography.accessTokenFromString(adminAccessTokenStr);
             devAdmin.setAccessToken(adminAccessToken);
 
-            String uekKey = Cryptography.generateUEK();
-            String uekSalt = Cryptography.generateEncryptionSalt();
-            String uek = uekSalt + uekKey;
+            String uek = Cryptography.generateUEK();
             String iekSalt = Cryptography.generateEncryptionSalt();
-            String iekKey = Cryptography.encryptUEK(adminAccessTokenStr, iekSalt, uek);
-            devAdmin.setIek(iekSalt + iekKey);
+            String iek = Cryptography.encryptUEK(uek, iekSalt, adminAccessTokenStr);
+            devAdmin.setIek(iek);
+            devAdmin.setIekSalt(iekSalt);
 
             db.getAdmins().add(devAdmin);
 
@@ -64,7 +61,9 @@ public class Main {
             db.getChapters().add(chapter1);
 
             Participant participant1 = new Participant();
-            participant1.setNameEnc(Cryptography.encryptData("My Name", uek));
+            String partNameSalt = Cryptography.generateEncryptionSalt();
+            participant1.setName(Cryptography.encryptData("My Name", partNameSalt, uek));
+            participant1.setNameSalt(partNameSalt);
             participant1.setCourseId(course.getId());
             String strTokenPart = Cryptography.generateAccessToken();
             System.out.println(strTokenPart);

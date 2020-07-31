@@ -33,6 +33,8 @@ digraph G {
 		label="{\N
 		|<id> id\l
 		|<accessToken> accessToken\l
+		|iek\l
+		|iekSalt\l
 		}"
 	]
 	
@@ -48,7 +50,8 @@ digraph G {
 		label="{\N
 		|<id> id\l
 		|<courseId> courseId\l
-		|nameEnc\l
+		|name\l
+		|nameSalt\l
 		|<cat> cat\l
 		}"
 	]

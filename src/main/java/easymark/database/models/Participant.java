@@ -4,7 +4,8 @@ import java.util.*;
 
 public class Participant extends Entity {
     private UUID courseId;
-    private String nameEnc;
+    private String name;
+    private String nameSalt;
     private AccessToken cat;
 
     public UUID getCourseId() {
@@ -15,12 +16,20 @@ public class Participant extends Entity {
         this.courseId = courseId;
     }
 
-    public String getNameEnc() {
-        return nameEnc;
+    public String getName() {
+        return name;
     }
 
-    public void setNameEnc(String nameEnc) {
-        this.nameEnc = nameEnc;
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getNameSalt() {
+        return nameSalt;
+    }
+
+    public void setNameSalt(String nameSalt) {
+        this.nameSalt = nameSalt;
     }
 
     public AccessToken getCat() {

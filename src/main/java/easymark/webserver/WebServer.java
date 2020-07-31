@@ -1,7 +1,6 @@
 package easymark.webserver;
 
 import easymark.*;
-import easymark.cryptography.*;
 import easymark.database.*;
 import easymark.database.models.*;
 import easymark.webserver.constants.*;
@@ -62,13 +61,14 @@ public class WebServer {
                             UserRole.PARTICIPANT);
                 } else {
                     String iek = matchingAdmin.getIek();
-                    String uekStr = Cryptography.decryptUEK(providedAccessTokenStr, iek);
+                    String iekSalt = matchingAdmin.getIekSalt();
+                    String uek = Cryptography.decryptUEK(iek, iekSalt, providedAccessTokenStr);
                     String set = Cryptography.generateSET();
-                    String setSalt = Cryptography.generateEncryptionSalt();
-                    String sek = Cryptography.encryptUEK(set, setSalt, uekStr);
+                    String sekSalt = Cryptography.generateEncryptionSalt();
+                    String sek = Cryptography.encryptUEK(uek, sekSalt, set);
                     ctx.cookie(CookieKeys.SET, set);
                     ctx.sessionAttribute(SessionKeys.SEK, sek);
-                    ctx.sessionAttribute(SessionKeys.SET_SALT, setSalt);
+                    ctx.sessionAttribute(SessionKeys.SEK_SALT, sekSalt);
                 }
                 if (matchingEntity == null)
                     throw FORBIDDEN;
@@ -83,7 +83,6 @@ public class WebServer {
             if (!checkCSRFToken(ctx, ctx.formParam(FormKeys.CSRF_TOKEN)))
                 throw new ForbiddenResponse("Forbidden");
             logOut(ctx);
-            ctx.removeCookie(CookieKeys.SET);
             ctx.redirect("/");
         });
 
@@ -109,19 +108,20 @@ public class WebServer {
                 model.put(ModelKeys.LOG_IN_OUT_CSRF_TOKEN, makeCSRFToken(ctx));
 
                 String set = ctx.cookie(CookieKeys.SET);
-                String setSalt = ctx.sessionAttribute(SessionKeys.SET_SALT);
                 String sek = ctx.sessionAttribute(SessionKeys.SEK);
-                if (set == null || setSalt == null || sek == null) {
+                String sekSalt = ctx.sessionAttribute(SessionKeys.SEK_SALT);
+                if (set == null || sekSalt == null || sek == null) {
                     logOut(ctx);
                     throw new InternalServerErrorResponse();
                 }
-                String uek = Cryptography.decryptUEK(set, setSalt + sek);
+                String uek = Cryptography.decryptUEK(sek, sekSalt, set);
 
-                String encData = db.get()
+                Participant part = db.get()
                         .getParticipants()
-                        .get(0)
-                        .getNameEnc();
-                String data = Cryptography.decryptData(encData, uek);
+                        .get(0);
+                String encData = part.getName();
+                String encSalt = part.getNameSalt();
+                String data = Cryptography.decryptData(encData, encSalt, uek);
                 model.put("encData", encData);
                 model.put("data", data);
 
@@ -226,6 +226,9 @@ public class WebServer {
         ctx.sessionAttribute(SessionKeys.CSRF_TOKENS, null);
         ctx.sessionAttribute(SessionKeys.ROLES, null);
         ctx.sessionAttribute(SessionKeys.ENTITY_ID, null);
+        ctx.sessionAttribute(SessionKeys.SEK, null);
+        ctx.sessionAttribute(SessionKeys.SEK_SALT, null);
+        ctx.removeCookie(CookieKeys.SET);
         ctx.req.changeSessionId();
     }
 }
