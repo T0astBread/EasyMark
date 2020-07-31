@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.function.*;
 import java.util.stream.*;
 
-import static io.javalin.core.security.SecurityUtil.roles;
+import static io.javalin.core.security.SecurityUtil.*;
 
 public class WebServer {
     public static final int PORT = 8080;

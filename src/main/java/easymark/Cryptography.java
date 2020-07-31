@@ -1,6 +1,5 @@
 package easymark;
 
-import easymark.*;
 import easymark.database.models.*;
 import org.springframework.security.crypto.encrypt.*;
 import org.springframework.security.crypto.keygen.*;
