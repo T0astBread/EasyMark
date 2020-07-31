@@ -1,6 +1,7 @@
 package easymark.webserver;
 
 import easymark.*;
+import easymark.cryptography.*;
 import easymark.database.*;
 import easymark.database.models.*;
 import easymark.webserver.constants.*;
@@ -39,18 +40,19 @@ public class WebServer {
             if (!checkCSRFToken(ctx, ctx.formParam(FormKeys.CSRF_TOKEN)))
                 throw FORBIDDEN;
 
-            String providedAccessToken = ctx.formParam("accessToken");
-            if (providedAccessToken == null || providedAccessToken.length() != 24)
+            String providedAccessTokenStr = ctx.formParam("accessToken");
+            if (providedAccessTokenStr == null || providedAccessTokenStr.length() != Cryptography.ACCESS_TOKEN_LENGTH)
                 throw FORBIDDEN;
-            String providedIdentifier = providedAccessToken.substring(0, 6);
-            String providedSecret = providedAccessToken.substring(6);
+            String providedIdentifier = providedAccessTokenStr.substring(0, Cryptography.ACCESS_TOKEN_IDENTIFIER_LENGTH);
+            String providedSecret = providedAccessTokenStr.substring(Cryptography.ACCESS_TOKEN_IDENTIFIER_LENGTH);
 
             try (DatabaseHandle dbHandle = DBMS.openRead()) {
-                Entity matchingEntity = checkAccessTokenMatch(
+                Admin matchingAdmin = checkAccessTokenMatch(
                         ctx, dbHandle.get().getAdmins(),
                         providedIdentifier, providedSecret,
                         Admin::getAccessToken,
                         UserRole.ADMIN);
+                Entity matchingEntity = matchingAdmin;
 
                 if (matchingEntity == null) {
                     matchingEntity = checkAccessTokenMatch(
@@ -58,6 +60,15 @@ public class WebServer {
                             providedIdentifier, providedSecret,
                             Participant::getCat,
                             UserRole.PARTICIPANT);
+                } else {
+                    String iek = matchingAdmin.getIek();
+                    String uekStr = Cryptography.decryptUEK(providedAccessTokenStr, iek);
+                    String set = Cryptography.generateSET();
+                    String setSalt = Cryptography.generateEncryptionSalt();
+                    String sek = Cryptography.encryptUEK(set, setSalt, uekStr);
+                    ctx.cookie(CookieKeys.SET, set);
+                    ctx.sessionAttribute(SessionKeys.SEK, sek);
+                    ctx.sessionAttribute(SessionKeys.SET_SALT, setSalt);
                 }
                 if (matchingEntity == null)
                     throw FORBIDDEN;
@@ -72,6 +83,7 @@ public class WebServer {
             if (!checkCSRFToken(ctx, ctx.formParam(FormKeys.CSRF_TOKEN)))
                 throw new ForbiddenResponse("Forbidden");
             logOut(ctx);
+            ctx.removeCookie(CookieKeys.SET);
             ctx.redirect("/");
         });
 
@@ -95,6 +107,24 @@ public class WebServer {
                 Map<String, Object> model = new HashMap<>();
                 model.put(ModelKeys.COURSES, db.get().getCourses());
                 model.put(ModelKeys.LOG_IN_OUT_CSRF_TOKEN, makeCSRFToken(ctx));
+
+                String set = ctx.cookie(CookieKeys.SET);
+                String setSalt = ctx.sessionAttribute(SessionKeys.SET_SALT);
+                String sek = ctx.sessionAttribute(SessionKeys.SEK);
+                if (set == null || setSalt == null || sek == null) {
+                    logOut(ctx);
+                    throw new InternalServerErrorResponse();
+                }
+                String uek = Cryptography.decryptUEK(set, setSalt + sek);
+
+                String encData = db.get()
+                        .getParticipants()
+                        .get(0)
+                        .getNameEnc();
+                String data = Cryptography.decryptData(encData, uek);
+                model.put("encData", encData);
+                model.put("data", data);
+
                 ctx.render("courses.peb", model);
             }
         }, roles(UserRole.ADMIN));

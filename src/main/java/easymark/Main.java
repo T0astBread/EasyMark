@@ -1,10 +1,12 @@
 package easymark;
 
 import easymark.cli.*;
+import easymark.cryptography.*;
 import easymark.database.*;
 import easymark.database.models.*;
 import easymark.webserver.*;
 import io.javalin.*;
+import org.springframework.security.crypto.encrypt.*;
 
 import java.io.*;
 
@@ -34,10 +36,19 @@ public class Main {
             Database db = dbHandle.get();
 
             Admin devAdmin = new Admin();
-            String strToken = AccessToken.generateString();
-            System.out.println(strToken);
-            AccessToken adminAccessToken = AccessToken.fromString(strToken);
+
+            String adminAccessTokenStr = Cryptography.generateAccessToken();
+            System.out.println(adminAccessTokenStr);
+            AccessToken adminAccessToken = Cryptography.accessTokenFromString(adminAccessTokenStr);
             devAdmin.setAccessToken(adminAccessToken);
+
+            String uekKey = Cryptography.generateUEK();
+            String uekSalt = Cryptography.generateEncryptionSalt();
+            String uek = uekSalt + uekKey;
+            String iekSalt = Cryptography.generateEncryptionSalt();
+            String iekKey = Cryptography.encryptUEK(adminAccessTokenStr, iekSalt, uek);
+            devAdmin.setIek(iekSalt + iekKey);
+
             db.getAdmins().add(devAdmin);
 
             Course course = new Course();
@@ -53,10 +64,11 @@ public class Main {
             db.getChapters().add(chapter1);
 
             Participant participant1 = new Participant();
+            participant1.setNameEnc(Cryptography.encryptData("My Name", uek));
             participant1.setCourseId(course.getId());
-            String strTokenPart = AccessToken.generateString();
+            String strTokenPart = Cryptography.generateAccessToken();
             System.out.println(strTokenPart);
-            AccessToken participantAccessToken = AccessToken.fromString(strTokenPart);
+            AccessToken participantAccessToken = Cryptography.accessTokenFromString(strTokenPart);
             participant1.setCat(participantAccessToken);
             db.getParticipants().add(participant1);
 
