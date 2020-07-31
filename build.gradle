@@ -28,7 +28,18 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }
 
-task buildDatamodelDiagram(type: Exec) {
-    workingDir new File(rootDir, 'doc')
-    commandLine 'dot', '-Tsvg', 'data_model.dot', '-o', 'data_model.svg'
+task buildDotFiles {
+    doFirst {
+        new File(rootDir, 'doc')
+                .listFiles()
+                .findAll { file -> file.getName().endsWith(".dot") }
+                .each { file ->
+                    def path = file.getAbsolutePath()
+                    def cmd = "dot -Tsvg ${path} -o ${path.substring(0, path.length() - 3)}svg"
+                    println cmd
+                    def proc = cmd.execute()
+                    proc.consumeProcessOutput(System.out, System.err)
+                    proc.waitFor()
+                }
+    }
 }

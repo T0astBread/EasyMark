@@ -1,0 +1,55 @@
+digraph G {
+	graph [
+		fontname="monospace"
+		fontsize=18
+		compound=true
+   	]
+	node [
+		fontname="monospace"
+		fontsize=18
+		shape=record
+	]
+	rankdir=LR
+
+	UEK
+	AT
+
+	subgraph cluster_server {
+		node [style=filled]
+		label="Server"
+		color=blue
+		rank=same
+
+		//cluster_server_pos [shape=none]
+		DATA
+		IEK
+		AT_HASH [label="AT-#"]
+
+		subgraph cluster_server_session {
+			node [style=filled]
+			label="Per-Session"
+			color=blue
+
+			SEK
+		}
+	}
+
+	subgraph cluster_client {
+		node [style=filled]
+		label="Client"
+		color=green
+		rank=same
+
+		//cluster_client_pos [shape=none]
+		SET
+	}
+
+	UEK -> DATA [label="encs",color=orange]
+	IEK -> UEK [label="is",color=red]
+	AT -> IEK [label="encs",color=orange]
+	SEK -> UEK [label="is",color=red]
+	SET -> SEK [label="encs",color=orange]
+	AT_HASH -> AT [label="is\n(hashed)"]
+
+	//{rank=same; cluster_server_pos cluster_client_pos}
+}
