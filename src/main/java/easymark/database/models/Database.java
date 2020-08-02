@@ -8,7 +8,6 @@ public class Database {
     private List<Participant> participants;
     private List<Chapter> chapters;
     private List<Assignment> assignments;
-    private List<ChapterResult> chapterResults;
     private List<AssignmentResult> assignmentResults;
     private List<TestRequest> testRequests;
 
@@ -18,7 +17,6 @@ public class Database {
         this.participants = new ArrayList<>();
         this.chapters = new ArrayList<>();
         this.assignments = new ArrayList<>();
-        this.chapterResults = new ArrayList<>();
         this.assignmentResults = new ArrayList<>();
         this.testRequests = new ArrayList<>();
     }
@@ -41,10 +39,6 @@ public class Database {
 
     public List<Assignment> getAssignments() {
         return assignments;
-    }
-
-    public List<ChapterResult> getChapterResults() {
-        return chapterResults;
     }
 
     public List<AssignmentResult> getAssignmentResults() {

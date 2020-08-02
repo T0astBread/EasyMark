@@ -9,7 +9,7 @@ public class Chapter extends Entity {
     private String name;
     private String description;
     private LocalDate dueDate;
-    private boolean testRequired;
+    private UUID testAssignmentId;
 
     public UUID getCourseId() {
         return courseId;
@@ -51,11 +51,11 @@ public class Chapter extends Entity {
         this.dueDate = dueDate;
     }
 
-    public boolean isTestRequired() {
-        return testRequired;
+    public UUID getTestAssignmentId() {
+        return testAssignmentId;
     }
 
-    public void setTestRequired(boolean testRequired) {
-        this.testRequired = testRequired;
+    public void setTestAssignmentId(UUID testAssignmentId) {
+        this.testAssignmentId = testAssignmentId;
     }
 }
