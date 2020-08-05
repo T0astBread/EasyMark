@@ -1,8 +1,11 @@
 package easymark.database.models;
 
+import java.util.*;
+
 public class Assignment extends Entity {
     private String name;
     private int maxScore;
+    private UUID chapterId;
 
     public String getName() {
         return name;
@@ -18,5 +21,13 @@ public class Assignment extends Entity {
 
     public void setMaxScore(int maxScore) {
         this.maxScore = maxScore;
+    }
+
+    public UUID getChapterId() {
+        return chapterId;
+    }
+
+    public void setChapterId(UUID chapterId) {
+        this.chapterId = chapterId;
     }
 }

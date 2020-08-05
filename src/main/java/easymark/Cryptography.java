@@ -9,6 +9,17 @@ public class Cryptography {
     public static final int ACCESS_TOKEN_IDENTIFIER_LENGTH = 8;
     private static final StringKeyGenerator KEY_GENERATOR = KeyGenerators.string();
 
+    public static AdminCreationSecrets generateAdminSecrets() {
+        String accessTokenStr = Cryptography.generateAccessToken();
+        AccessToken accessToken = Cryptography.accessTokenFromString(accessTokenStr);
+
+        String uek = Cryptography.generateUEK();
+        String iekSalt = Cryptography.generateEncryptionSalt();
+        String iek = Cryptography.encryptUEK(uek, iekSalt, accessTokenStr);
+
+        return new AdminCreationSecrets(accessTokenStr, accessToken, uek, iek, iekSalt);
+    }
+
     public static String generateEncryptionSalt() {
         return KEY_GENERATOR.generateKey();
     }
@@ -46,5 +57,21 @@ public class Cryptography {
 
     public static String decryptData(String cipherText, String salt, String uek) {
         return Encryptors.delux(uek, salt).decrypt(cipherText);
+    }
+
+    public static class AdminCreationSecrets {
+        public final String accessTokenStr;
+        public final AccessToken accessToken;
+        public final String uek;
+        public final String iek;
+        public final String iekSalt;
+
+        public AdminCreationSecrets(String accessTokenStr, AccessToken accessToken, String uek, String iek, String iekSalt) {
+            this.accessTokenStr = accessTokenStr;
+            this.accessToken = accessToken;
+            this.uek = uek;
+            this.iek = iek;
+            this.iekSalt = iekSalt;
+        }
     }
 }

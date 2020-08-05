@@ -1,6 +1,6 @@
 package easymark.cli;
 
-import easymark.*;
+import easymark.errors.*;
 
 import java.util.*;
 
@@ -19,16 +19,16 @@ public class CLI {
 
             case "reset-admin-token":
                 if (args.length < 2)
-                    throw new UserFriendlyException("reset-admin-token must be followed by an admin selector");
+                    throw new UserFriendlyException("reset-admin-token must be followed by an admin selector", ExitStatus.USER_ERROR);
                 return new CommandLineArgs.ResetAdminToken(parseAdminSelector(args[1]));
 
             case "delete-admin":
                 if (args.length < 2)
-                    throw new UserFriendlyException("delete-admin must be followed by an admin selector");
+                    throw new UserFriendlyException("delete-admin must be followed by an admin selector", ExitStatus.USER_ERROR);
                 return new CommandLineArgs.DeleteAdmin(parseAdminSelector(args[1]));
 
             default:
-                throw new UserFriendlyException("Unrecognized subcommand \"" + args[0] + "\" (must be serve/create-admin/reset-admin-token/delete-admin)");
+                throw new UserFriendlyException("Unrecognized subcommand \"" + args[0] + "\" (must be serve/create-admin/reset-admin-token/delete-admin)", ExitStatus.USER_ERROR);
         }
     }
 

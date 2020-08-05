@@ -1,6 +1,7 @@
 package easymark;
 
 import easymark.cli.*;
+import easymark.errors.*;
 import org.junit.*;
 
 import java.util.*;
