@@ -25,10 +25,11 @@
     {% endif %}
     <form action="/courses" method="post" class="add">
         <input id="courseName"
-                name="name"
-                placeholder="Course name"
-                title="Course name"
-                size="50"/>
+            name="name"
+            placeholder="Course name"
+            title="Course name"
+            size="50"
+            required/>
         <input type="hidden"
             name="groupId"
             value="{{ adminId }}"/>

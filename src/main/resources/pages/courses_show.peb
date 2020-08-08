@@ -52,11 +52,13 @@
             <input name="name"
                 placeholder="Assignment name"
                 title="Assignment name"
-                size="25"/>
+                size="25"
+                required/>
             <input type="number"
                 name="maxScore"
                 placeholder="Max. Score"
-                title="Max. Score"/>
+                title="Max. Score"
+                required/>
             <input type="hidden"
                 name="groupId"
                 value="{{ chapter.getId() }}"/>
@@ -69,10 +71,11 @@
     {% endfor %}
     <form action="/chapters" method="post" class="add">
         <input id="chapterName"
-                name="name"
-                placeholder="Chapter name"
-                title="Chapter name"
-                size="50"/>
+            name="name"
+            placeholder="Chapter name"
+            title="Chapter name"
+            size="50"
+            required/>
         <input type="hidden"
             name="courseId"
             value="{{ course.getId() }}"/>

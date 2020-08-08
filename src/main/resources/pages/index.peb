@@ -9,7 +9,10 @@
 {% block content %}
 <form id="login" action="/login" method="post">
     <label for="accessToken">Access Token</label>
-    <input type="password" name="accessToken" id="accessToken"/>
+    <input type="password"
+        name="accessToken"
+        id="accessToken"
+        required/>
     {% include "../partials/csrf-input.peb" %}
 </form>
 {% endblock %}

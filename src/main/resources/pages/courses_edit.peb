@@ -5,7 +5,8 @@
     <label for="name">Name: </label>
     <input id="name"
         name="name"
-        value="{{ course.getName() }}"/>
+        value="{{ course.getName() }}"
+        required/>
     <a href="/courses/{{ course.getID() }}">Back</a>
     {% include "../partials/csrf-input.peb" %}
     <button type="submit">Save</button>

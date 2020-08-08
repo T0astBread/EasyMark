@@ -5,7 +5,8 @@
     <label for="name">Name: </label>
     <input id="name"
         name="name"
-        value="{{ chapter.getName() }}"/>
+        value="{{ chapter.getName() }}"
+        required/>
     <input type="hidden"
         name="redirectUrl"
         value="{{ redirectUrl }}"/>
