@@ -1,0 +1,24 @@
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/style.css">
+    <title>{% block title %}{% endblock %}EasyMark</title>
+</head>
+
+<body {{ pageName ? 'id=page-' + pageName : '' }}>
+    {% block header %}
+        <header>
+            <span class="title">
+                <a href="/">EasyMark</a>
+            </span>
+            <div class="spacer"></div>
+            <form action="/logout" method="post">
+                {% include "../partials/csrf-input.peb" %}
+                <button type="submit">Log out</button>
+            </form>
+        </header>
+    {% endblock %}
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</body>

@@ -1,0 +1,16 @@
+{% extends "../partials/page.peb" %}
+
+{% block content %}
+<form action="/chapters/{{ chapter.getID() }}/save" method="post">
+    <label for="name">Name: </label>
+    <input id="name"
+        name="name"
+        value="{{ chapter.getName() }}"/>
+    <input type="hidden"
+        name="redirectUrl"
+        value="{{ redirectUrl }}"/>
+    {% include "../partials/csrf-input.peb" %}
+    <a href="{{ backUrl }}">Back</a>
+    <button type="submit">Save</button>
+</form>
+{% endblock %}

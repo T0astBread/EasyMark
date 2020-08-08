@@ -13,7 +13,7 @@ public class Main {
         try {
             final CommandLineArgs commandLineArgs = CLI.parse(args);
 
-            try {
+            try(DatabaseHandle db = DBMS.openWrite()) {
                 DBMS.load();
             } catch (IOException e) {
                 throw new UserFriendlyException("Failed to load database: " + e.getMessage(), ExitStatus.UNEXPECTED_ERROR);

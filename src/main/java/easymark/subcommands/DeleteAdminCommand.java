@@ -18,6 +18,7 @@ public class DeleteAdminCommand {
 
                 // Cascading delete admin
                 // I want an RDBMS
+                // FIXME: This piece of code is buggy nonsense
                 _db.getAdmins().remove(toRemove);
                 _db.getCourses().stream()
                         .filter(c -> toRemove.getId().equals(c.getAdminId()))
@@ -38,7 +39,7 @@ public class DeleteAdminCommand {
                                     });
                         });
 
-                DBMS.storeUnlocked();
+                DBMS.store();
                 System.out.println("Removed one matching admin with all associated courses and participants");
             }
 

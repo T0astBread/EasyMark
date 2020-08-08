@@ -1,0 +1,38 @@
+{% extends "../partials/page.peb" %}
+
+{% set currentUrl="/" %}
+
+{% set pageName="index-admin" %}
+
+{% block content %}
+    <h1>Courses</h1>
+    {% if courses.size() == 0 %}
+        <p>No courses</p>
+    {% else %}
+        <ul>
+        {% for course in courses %}
+            <li>
+                <div class="ordered-list-row">
+                    <a href="/courses/{{ course.getID() }}">{{ course.getName() }}</a>
+                    {% include "../partials/ordered-list-buttons.peb" with {
+                        "entitySetName": "courses",
+                        "entity": course
+                    } %}
+                </div>
+            </li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+    <form action="/courses" method="post" class="add">
+        <input id="courseName"
+                name="name"
+                placeholder="Course name"
+                title="Course name"
+                size="50"/>
+        <input type="hidden"
+            name="groupId"
+            value="{{ adminId }}"/>
+        {% include "../partials/csrf-input.peb" %}
+        <button type="submit">Add course</button>
+    </form>
+{% endblock %}

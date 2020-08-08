@@ -1,0 +1,82 @@
+{% extends "../partials/page.peb" %}
+
+{% set pageName="courses-show" %}
+{% set currentUrl="/courses/"+course.getId() %}
+
+{% block content %}
+    <div class="ordered-list-row">
+        <h1>{{ course.getName() }}</h1>
+        <a href="/courses/{{ course.getId() }}/edit"
+            class="symbol"
+            style="font-size: .6em">✏️</a>
+        <form action="/courses/{{ course.getId() }}?action=delete" method="post">
+            <input type="hidden"
+                name="redirectUrl"
+                value="/"/>
+            {% include "../partials/csrf-input.peb" %}
+            <button type="submit" class="symbol">❌</button>
+        </form>
+    </div>
+    {% for chapter in chapters %}
+        <div class="ordered-list-row">
+            <h2>{{ chapter.getName() }}</h2>
+            {% include "../partials/ordered-list-buttons.peb" with {
+                "edit": true,
+                "entitySetName": "chapters",
+                "entity": chapter,
+                "editUrl": "/chapters/"+chapter.getID()+"/edit?backUrl="+currentUrl+"&redirectUrl="+currentUrl
+            } %}
+        </div>
+        <ul>
+        {% for assignment in assignmentsPerChapter.get(chapter.getId()) %}
+            <li>
+                <div class="ordered-list-row">
+                    <a href="/assignments/{{ assignment.getID() }}">{{ assignment.getName() }}</a>
+                    {% include "../partials/ordered-list-buttons.peb" with {
+                        "entitySetName": "assignments",
+                        "entity": assignment
+                    } %}
+                </div>
+            </li>
+        {% endfor %}
+        </ul>
+        {% set addToggleId="add-toggle-" + chapter.getID() %}
+        <input type="checkbox"
+            id="{{ addToggleId }}"
+            class="form-toggle add"/>
+        <label for="{{ addToggleId }}">
+            <span class="unchecked">+ Add...</span>
+            <span class="checked symbol">❌</span>
+        </label>
+        <form action="/assignments" method="post" class="add">
+            <input name="name"
+                placeholder="Assignment name"
+                title="Assignment name"
+                size="25"/>
+            <input type="number"
+                name="maxScore"
+                placeholder="Max. Score"
+                title="Max. Score"/>
+            <input type="hidden"
+                name="groupId"
+                value="{{ chapter.getId() }}"/>
+            <input type="hidden"
+                name="redirectUrl"
+                value="{{ currentUrl }}"/>
+            {% include "../partials/csrf-input.peb" %}
+            <button type="submit">Add assignment</button>
+        </form>
+    {% endfor %}
+    <form action="/chapters" method="post" class="add">
+        <input id="chapterName"
+                name="name"
+                placeholder="Chapter name"
+                title="Chapter name"
+                size="50"/>
+        <input type="hidden"
+            name="courseId"
+            value="{{ course.getId() }}"/>
+        {% include "../partials/csrf-input.peb" %}
+        <button type="submit">Add chapter</button>
+    </form>
+{% endblock %}

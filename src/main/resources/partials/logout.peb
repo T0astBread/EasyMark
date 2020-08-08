@@ -1,4 +1,0 @@
-<form action="/logout" method="post">
-    <input type="hidden" name="csrfToken" value="{{ logInOutCsrfToken.getValue() }}"/>
-    <button type="submit">Log out</button>
-</form>

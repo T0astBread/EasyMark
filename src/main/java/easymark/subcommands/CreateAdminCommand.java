@@ -19,7 +19,7 @@ public class CreateAdminCommand {
 
         try(DatabaseHandle db = DBMS.openWrite()) {
             db.get().getAdmins().add(newAdmin);
-            DBMS.storeUnlocked();
+            DBMS.store();
         } catch (IOException e) {
             throw new UserFriendlyException("Failed to add admin to database: " + e.getMessage(), e, ExitStatus.UNEXPECTED_ERROR);
         }

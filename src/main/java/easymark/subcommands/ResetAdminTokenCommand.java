@@ -31,7 +31,7 @@ public class ResetAdminTokenCommand {
                                     });
                         });
 
-                DBMS.storeUnlocked();
+                DBMS.store();
                 System.out.println("New access token: " + secrets.accessTokenStr);
             }
 

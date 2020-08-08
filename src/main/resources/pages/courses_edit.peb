@@ -1,0 +1,13 @@
+{% extends "../partials/page.peb" %}
+
+{% block content %}
+<form action="/courses/{{ course.getID() }}/save" method="post">
+    <label for="name">Name: </label>
+    <input id="name"
+        name="name"
+        value="{{ course.getName() }}"/>
+    <a href="/courses/{{ course.getID() }}">Back</a>
+    {% include "../partials/csrf-input.peb" %}
+    <button type="submit">Save</button>
+</form>
+{% endblock %}

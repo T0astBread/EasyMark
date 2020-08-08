@@ -26,29 +26,19 @@ public class DBMS {
     }
 
     public static void load() throws IOException {
-        try(DatabaseHandle db = openWrite()) {
-            if (!DATABASE_FILE.exists())
-                return;
+        if (!DATABASE_FILE.exists())
+            return;
 
-            try (FileReader reader = new FileReader(DATABASE_FILE)) {
-                database = GSON.fromJson(reader, Database.class);
-            }
+        try (FileReader reader = new FileReader(DATABASE_FILE)) {
+            database = GSON.fromJson(reader, Database.class);
         }
     }
 
     public static void replace(Database database) throws IOException {
-        try(DatabaseHandle db = openWrite()) {
-            DBMS.database = database;
-        }
+        DBMS.database = database;
     }
 
     public static void store() throws IOException {
-        try(DatabaseHandle db = openRead()) {
-            storeUnlocked();
-        }
-    }
-
-    public static void storeUnlocked() throws IOException {
         try (FileWriter writer = new FileWriter(DATABASE_FILE)) {
             GSON.toJson(database, writer);
         }

@@ -1,0 +1,15 @@
+{% extends "../partials/page.peb" %}
+
+{% block title %}Login - {% endblock %}
+{% block header %}{% endblock %}
+
+{% set pageName="login" %}
+
+
+{% block content %}
+<form id="login" action="/login" method="post">
+    <label for="accessToken">Access Token</label>
+    <input type="password" name="accessToken" id="accessToken"/>
+    {% include "../partials/csrf-input.peb" %}
+</form>
+{% endblock %}

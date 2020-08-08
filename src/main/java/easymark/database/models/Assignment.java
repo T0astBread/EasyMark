@@ -2,9 +2,10 @@ package easymark.database.models;
 
 import java.util.*;
 
-public class Assignment extends Entity {
+public class Assignment extends Entity implements Ordered {
     private String name;
     private int maxScore;
+    private int ordNum;
     private UUID chapterId;
 
     public String getName() {
@@ -21,6 +22,14 @@ public class Assignment extends Entity {
 
     public void setMaxScore(int maxScore) {
         this.maxScore = maxScore;
+    }
+
+    public int getOrdNum() {
+        return ordNum;
+    }
+
+    public void setOrdNum(int ordNum) {
+        this.ordNum = ordNum;
     }
 
     public UUID getChapterId() {

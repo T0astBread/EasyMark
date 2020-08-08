@@ -1,0 +1,6 @@
+{% extends "../partials/page.peb" %}
+
+{% block content %}
+    <h1>Hello participant</h1>
+{% endblock %}
+
