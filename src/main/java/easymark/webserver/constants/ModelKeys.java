@@ -11,4 +11,5 @@ public class ModelKeys {
     public static final String CHAPTER = "chapter";
     public static final String BACK_URL = "backUrl";
     public static final String REDIRECT_URL = "redirectUrl";
+    public static final String ASSIGNMENT = "assignment";
 }

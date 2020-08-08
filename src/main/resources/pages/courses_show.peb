@@ -34,7 +34,9 @@
                     <a href="/assignments/{{ assignment.getID() }}">{{ assignment.getName() }}</a>
                     {% include "../partials/ordered-list-buttons.peb" with {
                         "entitySetName": "assignments",
-                        "entity": assignment
+                        "entity": assignment,
+                        "edit": true,
+                        "editUrl": "/assignments/"+assignment.getID()+"/edit?backUrl="+currentUrl+"&redirectUrl="+currentUrl
                     } %}
                 </div>
             </li>

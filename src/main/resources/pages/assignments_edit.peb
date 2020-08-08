@@ -1,0 +1,23 @@
+{% extends "../partials/page.peb" %}
+
+{% block content %}
+<form action="/assignments/{{ assignment.getID() }}/save" method="post">
+    <label for="name">Name: </label>
+    <input id="name"
+        name="name"
+        value="{{ assignment.getName() }}"
+        required/>
+    <label for="maxScore">Max. score: </label>
+    <input type="number"
+        id="maxScore"
+        name="maxScore"
+        value="{{ assignment.getMaxScore() }}"
+        required/>
+    <input type="hidden"
+        name="redirectUrl"
+        value="{{ redirectUrl }}"/>
+    {% include "../partials/csrf-input.peb" %}
+    <a href="{{ backUrl }}">Back</a>
+    <button type="submit">Save</button>
+</form>
+{% endblock %}
