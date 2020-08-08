@@ -1,0 +1,9 @@
+#!/bin/sh
+find src \( \
+	-type f \
+	-name "*.java" \
+	-o -name "*.html" \
+	-o -name "*.css" \
+	-o -name "*.js" \
+	-o -name "*.peb" \
+	\) -exec cat {} \; | grep -vE "^\\s*\$" | wc -l
