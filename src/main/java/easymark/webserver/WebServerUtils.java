@@ -13,6 +13,19 @@ import java.util.stream.*;
 
 public class WebServerUtils {
 
+    public static String getUekFromContext(Context ctx) {
+        String set = ctx.cookie(CookieKeys.SET);
+        if (set == null)
+            throw new BadRequestResponse("SET not set");
+        String sek = ctx.sessionAttribute(SessionKeys.SEK);
+        if (sek == null)
+            throw new BadRequestResponse("SEK not set");
+        String sekSalt = ctx.sessionAttribute(SessionKeys.SEK_SALT);
+        if (sekSalt == null)
+            throw new BadRequestResponse("SEK salt not set");
+        return Cryptography.decryptUEK(sek, sekSalt, set);
+    }
+
     public static <E extends Entity> E checkAccessTokenMatch(
             Context ctx,
             List<E> table,

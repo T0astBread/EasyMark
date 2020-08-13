@@ -1,5 +1,6 @@
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="/style.css">
     <title>{% block title %}{% endblock %}EasyMark</title>
 </head>
@@ -8,13 +9,15 @@
     {% block header %}
         <header>
             <span class="title">
-                <a href="/">EasyMark</a>
+                <a href="/">{% block titleOnPage %}EasyMark{% endblock %}</a>
             </span>
             <div class="spacer"></div>
+            {% block headerButtonsLeft %}{% endblock %}
             <form action="/logout" method="post">
                 {% include "../partials/csrf-input.peb" %}
                 <button type="submit">Log out</button>
             </form>
+            {% block headerButtonsRight %}{% endblock %}
         </header>
     {% endblock %}
 

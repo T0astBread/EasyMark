@@ -1,0 +1,129 @@
+{% extends "../partials/page.peb" %}
+
+{% set pageName="courses-grading" %}
+{% set currentUrl="/courses/"+course.getId()+"/grading" %}
+
+{% block titleOnPage %}{{ course.getName() }}{% endblock %}
+{% block headerButtonsRight %}
+    <button type="submit"
+        form="main-form"
+        id="save-button">Save</button>
+{% endblock %}
+
+
+
+{% block content %}
+<script src="/courses_grading.js" defer></script>
+<form action="/courses/{{ course.getId() }}/grading" method="post"
+    id="main-form"
+    class="table-wrapper">
+    <table>
+        <thead>
+            <tr>
+                <th rowspan="2" id="participant-header">Participant</th>
+                <th colspan="3">Status</th>
+                <th colspan="3">Overview</th>
+                {% for chapter in chapters %}
+                    {% set assignmentsForChapter=assignmentsPerChapter.get(chapter.getID()) %}
+                    <th colspan="{{ assignmentsForChapter.size() }}">{{ chapter.getName() }}</th>
+                {% endfor %}
+            </tr>
+            <tr>
+                <th>Warning</th>
+                <th>CAT</th>
+                <th>Group</th>
+                <th>Score</th>
+                <th>Max</th>
+                <th>%</th>
+                {% for chapter in chapters %}
+                    {% set assignmentsForChapter=assignmentsPerChapter.get(chapter.getID()) %}
+                    {% for assignment in assignmentsForChapter %}
+                        <th title="{{ assignment.getName() }}">
+                            <div style="width: 100%; display: inline-flex; flex-direction: row">
+                                <div style="flex: 1 1 0; min-width: 0; width: 0">
+                                    <div style="text-overflow: ellipsis; overflow: hidden">{{ assignment.getName() }}</div>
+                                </div>
+                            </div>
+                        </th>
+                    {% endfor %}
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% set startTabindex=1 %}
+            {% for participant in participants %}
+                {% set participantIndex=loop.index %}
+                <tr>
+                    <th scope="col">
+                        <div>{{ namePerParticipant.get(participant.getID()) }}</div>
+                    </th>
+                    <td>
+                        <input name="{{ participant.getId() }}-warning"
+                            data-position-x="-3"
+                            data-position-y="{{ participantIndex }}"/>
+                    </td>
+                    <td>
+                        <button type="submit"
+                            form="{{ participant.getID() }}-reset-cat-form"
+                            data-position-x="-2"
+                            data-position-y="{{ participantIndex }}"
+                            >Reset</button>
+                    </td>
+                    <td>
+                        <input name="{{ participant.getId() }}-group"
+                            data-position-x="-1"
+                            data-position-y="{{ participantIndex }}"/>
+                    </td>
+                    <td>{{ scorePerParticipant.get(participant.getId()) }}</td>
+                    <td>{{ maxScorePerParticipant.get(participant.getId()) }}</td>
+                    <td>{{ ratioPerParticipant.get(participant.getId()) }}</td>
+                    {% set assignmentResultPerAssignment=assignmentResultPerAssignmentPerParticipant.get(participant.getId()) %}
+                    {% for assignment in assignments %}
+                        {% set assignmentResult=assignmentResultPerAssignment.get(assignment.getId()) %}
+                        <td>
+                            <input type="number"
+                                name="{{ participant.getId() }}-score-{{ assignment.getId() }}"
+                                value="{{ assignmentResult ? assignmentResult.getScore() : "" }}"
+                                class="score-input"
+                                data-position-x="{{ loop.index }}"
+                                data-position-y="{{ participantIndex }}"/>
+                        </td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</form>
+<div id="create-participant-form-elements">
+    <input name="name"
+        placeholder="Participant name"
+        required
+        form="create-participant-form"/>
+    <button type="submit"
+        form="create-participant-form"
+        >Add</button>
+    <span class="spacer"></span>
+    <span>{{ assignmentCount }} assignments, {{ participants.size() }} participants</span>
+</div>
+<div style="display: none">
+    <form action="/participants" method="post"
+        id="create-participant-form">
+        <input type="hidden"
+            name="courseId"
+            value="{{ course.getID() }}"/>
+        <input type="hidden"
+            name="redirectUrl"
+            value="{{ currentUrl }}"/>
+        {% include "../partials/csrf-input.peb" %}
+    </form>
+    {% for participant in participants %}
+    <form action="/participants/{{ participant.getID() }}/reset-cat" method="post"
+        id="{{ participant.getID() }}-reset-cat-form">
+        <input type="hidden"
+            name="redirectUrl"
+            value="{{ currentUrl }}"/>
+        {% include "../partials/csrf-input.peb" %}
+    </form>
+    {% endfor %}
+</div>
+{% endblock %}
