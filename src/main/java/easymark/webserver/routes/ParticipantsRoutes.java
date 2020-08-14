@@ -46,13 +46,32 @@ public class ParticipantsRoutes {
                 DBMS.store();
             }
 
-            Map<String, Object> model = new HashMap<>();
-            model.put(ModelKeys.NAME, rawName);
-            model.put(ModelKeys.NEW_CAT, rawCat);
             String redirectUrl = ctx.formParam(FormKeys.REDIRECT_URL);
-            if (redirectUrl != null)
-                model.put(ModelKeys.REDIRECT_URL, redirectUrl);
-            ctx.render("pages/participants_create.peb", model);
+
+            ctx.sessionAttribute(SessionKeys.NAME_DISPLAY, rawName);
+            ctx.sessionAttribute(SessionKeys.AT_DISPLAY, rawCat);
+            ctx.redirect("/participants/cat-show?redirectUrl="+redirectUrl);
+        }, roles(UserRole.ADMIN));
+
+        app.get("/participants/cat-show", ctx -> {
+            String redirectUrl = ctx.queryParam(QueryKeys.RECIRECT_URL);
+            String name = ctx.sessionAttribute(SessionKeys.NAME_DISPLAY);
+            String cat = ctx.sessionAttribute(SessionKeys.AT_DISPLAY);
+            ctx.sessionAttribute(SessionKeys.NAME_DISPLAY, null);
+            ctx.sessionAttribute(SessionKeys.AT_DISPLAY, null);
+            if (name == null || cat == null)
+                throw new BadRequestResponse();
+
+            try {
+                ctx.header("Cache-Control", "no-store");  // Needed so that back button doesn't break
+                ctx.render("pages/participants_create.peb", Map.of(
+                        ModelKeys.REDIRECT_URL, redirectUrl == null ? "/" : redirectUrl,
+                        ModelKeys.NAME, name,
+                        ModelKeys.NEW_AT, cat
+                ));
+            } catch (Exception e) {
+                throw new BadRequestResponse("Parameters expired");
+            }
         }, roles(UserRole.ADMIN));
     }
 }

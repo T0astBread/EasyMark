@@ -148,6 +148,8 @@ public class WebServerUtils {
                 ctx.cookie(CookieKeys.SET, set);
                 ctx.sessionAttribute(SessionKeys.SEK, sek);
                 ctx.sessionAttribute(SessionKeys.SEK_SALT, sekSalt);
+                ctx.sessionAttribute(SessionKeys.NAME_DISPLAY, null);
+                ctx.sessionAttribute(SessionKeys.AT_DISPLAY, null);
             }
             if (matchingEntity == null)
                 throw FORBIDDEN;
@@ -162,6 +164,8 @@ public class WebServerUtils {
         ctx.sessionAttribute(SessionKeys.ENTITY_ID, null);
         ctx.sessionAttribute(SessionKeys.SEK, null);
         ctx.sessionAttribute(SessionKeys.SEK_SALT, null);
+        ctx.sessionAttribute(SessionKeys.NAME_DISPLAY, null);
+        ctx.sessionAttribute(SessionKeys.AT_DISPLAY, null);
         ctx.removeCookie(CookieKeys.SET);
         ctx.req.changeSessionId();
     }

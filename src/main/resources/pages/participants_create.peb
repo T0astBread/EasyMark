@@ -2,7 +2,7 @@
 
 {% block content %}
 <p>New access token for <strong>{{ name }}:</strong></p>
-<p><strong>{{ newCat }}</strong></p>
+<p><strong id="cat">{{ newAt }}</strong></p>
 <p><small>Copy/forward/share this now, you will never see it again.</small></p>
 <a href="{{ redirectUrl }}">Continue</a>
 {% endblock %}

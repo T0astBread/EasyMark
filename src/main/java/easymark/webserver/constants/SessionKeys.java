@@ -7,4 +7,6 @@ public class SessionKeys {
     public static final String LAST_SESSION_ACTION = "lastSessionAction";
     public static final String SEK = "sek";
     public static final String SEK_SALT = "sekSalt";
+    public static final String NAME_DISPLAY = "nameDisplay";
+    public static final String AT_DISPLAY = "atDisplay";
 }
