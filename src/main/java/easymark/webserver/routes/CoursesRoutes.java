@@ -104,6 +104,7 @@ public class CoursesRoutes {
                     throw new ForbiddenResponse("You are not the admin of this course");
 
                 assignmentsPerChapter = new HashMap<>();
+                assignments = new ArrayList<>();
                 chapters = db.get().getChapters()
                         .stream()
                         .filter(chapter -> chapter.getCourseId().equals(courseId))
@@ -113,12 +114,11 @@ public class CoursesRoutes {
                                     .filter(assignment -> assignment.getChapterId().equals(chapter.getId()))
                                     .sorted(Comparator.comparingInt(Assignment::getOrdNum))
                                     .collect(Collectors.toUnmodifiableList());
+                            assignments.addAll(assignmentsForParticipant);
                             assignmentsPerChapter.put(chapter.getId(), assignmentsForParticipant);
                         })
                         .sorted(Comparator.comparingInt(Chapter::getOrdNum))
                         .collect(Collectors.toUnmodifiableList());
-
-                assignments = db.get().getAssignments();
 
                 assignmentResultsPerAssignmentPerParticipant = new HashMap<>();
                 namePerParticipant = new HashMap<>();
