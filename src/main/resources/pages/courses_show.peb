@@ -17,6 +17,9 @@
             <button type="submit" class="symbol">❌</button>
         </form>
     </div>
+    <p>
+        <a href="/courses/{{ course.getId() }}/grading">Edit participants and grading...</a>
+    </p>
     {% for chapter in chapters %}
         <div class="ordered-list-row">
             <h2>{{ chapter.getName() }}</h2>
