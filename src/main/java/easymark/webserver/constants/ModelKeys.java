@@ -25,4 +25,5 @@ public class ModelKeys {
     public static final String DELETE_URL = "deleteUrl";
     public static final String DELETE_ENTITY_NAME = "deleteEntityName";
     public static final String CANCEL_URL = "cancelUrl";
+    public static final String PARTICIPANT = "participant";
 }

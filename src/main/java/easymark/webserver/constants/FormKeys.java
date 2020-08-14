@@ -8,4 +8,6 @@ public class FormKeys {
     public static final String REDIRECT_URL = "redirectUrl";
     public static final String MAX_SCORE = "maxScore";
     public static final String GROUP_ID = "groupId";
+    public static final String WARNING = "warning";
+    public static final String GROUP = "group";
 }

@@ -1,0 +1,25 @@
+{% extends "../partials/page.peb" %}
+
+{% block content %}
+<form action="/participants/{{ participant.getId() }}/update" method="post">
+    <label for="name">Name: </label>
+    <input id="name"
+        name="name"
+        value="{{ name }}"
+        required/>
+    <label for="warning">Warning: </label>
+    <input id="warning"
+        name="warning"
+        value="{{ participant.getWarning() }}"/>
+    <label for="group">Group: </label>
+    <input id="group"
+        name="group"
+        value="{{ participant.getGroup() }}"/>
+    <input type="hidden"
+        name="redirectUrl"
+        value="{{ redirectUrl }}"/>
+    {% include "../partials/csrf-input.peb" %}
+    <a href="{{ backUrl }}">Back</a>
+    <button type="submit">Save</button>
+</form>
+{% endblock %}
