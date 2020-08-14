@@ -119,6 +119,10 @@ form.add {
     font-size: .6em;
 }
 
+.confirm-delete-text {
+    max-width: 50ch;
+}
+
 #login {
     width: 90%;
     max-width: 50rem;

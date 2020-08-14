@@ -2,7 +2,7 @@
 
 {% block content %}
 <form action="{{ deleteUrl }}" method="post">
-    <p>Are you sure you want to delete <strong>{{ deleteEntityName }}?</strong></p>
+    <p class="confirm-delete-text">Are you sure you want to delete <strong>{{ deleteEntityName }}?</strong></p>
     <a href="{{ cancelUrl }}">No</a>
     <button type="submit">Yes, delete</button>
     <input type="hidden"
