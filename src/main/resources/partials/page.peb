@@ -9,7 +9,7 @@
     {% block header %}
         <header>
             <span class="title">
-                <a href="/">{% block titleOnPage %}EasyMark{% endblock %}</a>
+                {% block titleOnPage %}<a href="/">EasyMark</a>{% endblock %}
             </span>
             <div class="spacer"></div>
             {% block headerButtonsLeft %}{% endblock %}

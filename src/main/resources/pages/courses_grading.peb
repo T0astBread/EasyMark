@@ -3,7 +3,7 @@
 {% set pageName="courses-grading" %}
 {% set currentUrl="/courses/"+course.getId()+"/grading" %}
 
-{% block titleOnPage %}{{ course.getName() }}{% endblock %}
+{% block titleOnPage %}<a href="/courses/{{ course.getId() }}">{{ course.getName() }}</a>{% endblock %}
 {% block headerButtonsRight %}
     <button type="submit"
         form="main-form"
