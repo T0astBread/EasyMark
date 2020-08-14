@@ -34,7 +34,7 @@
         {% for assignment in assignmentsPerChapter.get(chapter.getId()) %}
             <li>
                 <div class="ordered-list-row">
-                    <a href="/assignments/{{ assignment.getID() }}">{{ assignment.getName() }}</a>
+                    {{ assignment.getName() }}
                     {% include "../partials/ordered-list-buttons.peb" with {
                         "entitySetName": "assignments",
                         "entity": assignment,
