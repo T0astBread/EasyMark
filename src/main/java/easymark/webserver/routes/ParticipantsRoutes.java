@@ -10,8 +10,7 @@ import io.javalin.http.*;
 
 import java.util.*;
 
-import static easymark.webserver.WebServerUtils.checkCSRFToken;
-import static easymark.webserver.WebServerUtils.getUekFromContext;
+import static easymark.webserver.WebServerUtils.*;
 import static io.javalin.core.security.SecurityUtil.roles;
 
 public class ParticipantsRoutes {
@@ -50,7 +49,7 @@ public class ParticipantsRoutes {
 
             ctx.sessionAttribute(SessionKeys.NAME_DISPLAY, rawName);
             ctx.sessionAttribute(SessionKeys.AT_DISPLAY, rawCat);
-            ctx.redirect("/participants/cat-show?redirectUrl="+redirectUrl);
+            ctx.redirect("/participants/cat-show?redirectUrl=" + redirectUrl);
         }, roles(UserRole.ADMIN));
 
         app.get("/participants/cat-show", ctx -> {
@@ -72,6 +71,67 @@ public class ParticipantsRoutes {
             } catch (Exception e) {
                 throw new BadRequestResponse("Parameters expired");
             }
+        }, roles(UserRole.ADMIN));
+
+
+        app.get("/participants/:id/confirm-delete", ctx -> {
+            UUID participantId;
+            try {
+                participantId = UUID.fromString(ctx.pathParam(PathParams.ID));
+            } catch (Exception e) {
+                throw new BadRequestResponse();
+            }
+
+            Participant participant;
+            Course course;
+            try (DatabaseHandle db = DBMS.openRead()) {
+                participant = db.get().getParticipants()
+                        .stream()
+                        .filter(p -> p.getId().equals(participantId))
+                        .findAny()
+                        .orElseThrow(NotFoundResponse::new);
+                course = db.get().getCourses()
+                        .stream()
+                        .filter(c -> c.getId().equals(participant.getCourseId()))
+                        .findAny()
+                        .orElseThrow(NotFoundResponse::new);
+            }
+            String uek = getUekFromContext(ctx);
+            String name = Cryptography.decryptData(participant.getName(), participant.getNameSalt(), uek);
+
+            Map<String, Object> model = new HashMap<>();
+            model.put(ModelKeys.DELETE_URL, "/participants/" + participantId + "/delete");
+            model.put(ModelKeys.DELETE_ENTITY_NAME, name + " from course " + course.getName());
+            model.put(ModelKeys.CANCEL_URL, "/courses/"+course.getId()+"/grading");
+            model.put(ModelKeys.REDIRECT_URL, "/courses/"+course.getId()+"/grading");
+            model.put(ModelKeys.CSRF_TOKEN, makeCSRFToken(ctx));
+            ctx.render("pages/confirm-delete.peb", model);
+        }, roles(UserRole.ADMIN));
+
+
+        app.post("/participants/:id/delete", ctx -> {
+            if (!checkCSRFToken(ctx, ctx.formParam(FormKeys.CSRF_TOKEN)))
+                throw new ForbiddenResponse("Forbidden");
+
+            UUID participantId;
+            try {
+                participantId = UUID.fromString(ctx.pathParam(PathParams.ID));
+            } catch (Exception e) {
+                throw new BadRequestResponse();
+            }
+
+            Participant participant;
+            try (DatabaseHandle db = DBMS.openWrite()) {
+                participant = db.get().getParticipants()
+                        .stream()
+                        .filter(p -> p.getId().equals(participantId))
+                        .findAny()
+                        .orElseThrow(NotFoundResponse::new);
+                db.get().getParticipants().remove(participant);
+                DBMS.store();
+            }
+
+            ctx.redirect("/courses/"+participant.getCourseId()+"/grading");
         }, roles(UserRole.ADMIN));
     }
 }

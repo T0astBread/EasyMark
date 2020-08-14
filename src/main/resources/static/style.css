@@ -236,6 +236,11 @@ form.add {
     top: 0;
 }
 
+#page-courses-grading tbody th > div {
+    display: flex;
+    flex-direction: row;
+}
+
 #page-courses-grading tbody th::before {
     right: -1px;
 }
@@ -276,7 +281,7 @@ form.add {
     z-index: 1;
 }
 
-#page-courses-grading tbody th > * {
+#page-courses-grading tbody th > * > .name {
     width: 100%;
     text-overflow: ellipsis;
     overflow: hidden;

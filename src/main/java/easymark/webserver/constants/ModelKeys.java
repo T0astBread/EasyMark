@@ -22,4 +22,7 @@ public class ModelKeys {
     public static final String MAX_SCORE_PER_PARTICIPANT = "maxScorePerParticipant";
     public static final String RATIO_PER_PARTICIPANT = "ratioPerParticipant";
     public static final String ASSIGNMENT_RESULT_PER_ASSIGNMENT_PER_PARTICIPANT = "assignmentResultPerAssignmentPerParticipant";
+    public static final String DELETE_URL = "deleteUrl";
+    public static final String DELETE_ENTITY_NAME = "deleteEntityName";
+    public static final String CANCEL_URL = "cancelUrl";
 }

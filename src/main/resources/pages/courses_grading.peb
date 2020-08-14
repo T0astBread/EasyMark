@@ -56,7 +56,11 @@
                 {% set participantIndex=loop.index %}
                 <tr>
                     <th scope="col">
-                        <div>{{ namePerParticipant.get(participant.getID()) }}</div>
+                        <div>
+                            <a href="/participants/{{ participant.getId() }}/confirm-delete" class="symbol">❌</a>
+                            <a href="/participants/{{ participant.getId() }}/edit" class="symbol">✏</a>
+                            <div class="name">{{ namePerParticipant.get(participant.getID()) }}</div>
+                        </div>
                     </th>
                     <td>
                         <input name="{{ participant.getId() }}-warning"

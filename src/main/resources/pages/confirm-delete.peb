@@ -1,0 +1,13 @@
+{% extends "../partials/page.peb" %}
+
+{% block content %}
+<form action="{{ deleteUrl }}" method="post">
+    <p>Are you sure you want to delete <strong>{{ deleteEntityName }}?</strong></p>
+    <a href="{{ cancelUrl }}">No</a>
+    <button type="submit">Yes, delete</button>
+    <input type="hidden"
+        name="redirectUrl"
+        value="{{ redirectUrl }}"/>
+    {% include "../partials/csrf-input.peb" %}
+</form>
+{% endblock %}
