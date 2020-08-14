@@ -7,6 +7,8 @@ public class Participant extends Entity {
     private String name;
     private String nameSalt;
     private AccessToken cat;
+    private String warning;
+    private String group;
 
     public UUID getCourseId() {
         return courseId;
@@ -38,5 +40,21 @@ public class Participant extends Entity {
 
     public void setCat(AccessToken cat) {
         this.cat = cat;
+    }
+
+    public String getWarning() {
+        return warning;
+    }
+
+    public void setWarning(String warning) {
+        this.warning = warning;
+    }
+
+    public String getGroup() {
+        return group;
+    }
+
+    public void setGroup(String group) {
+        this.group = group;
     }
 }

@@ -158,7 +158,7 @@ public class CoursesRoutes {
                                             .orElseThrow()
                                             .getMaxScore())
                                     .sum();
-                            float ratio = ((float)totalScore) / ((float) maxScore);
+                            float ratio = Math.round((((float) totalScore) / ((float) maxScore)) * 10000) / 100f;
                             scorePerParticipant.put(participant.getId(), totalScore);
                             maxScorePerParticipant.put(participant.getId(), maxScore);
                             ratioPerParticipant.put(participant.getId(), ratio);
@@ -184,6 +184,75 @@ public class CoursesRoutes {
             model.put(ModelKeys.MAX_SCORE_PER_PARTICIPANT, maxScorePerParticipant);
             model.put(ModelKeys.RATIO_PER_PARTICIPANT, ratioPerParticipant);
             ctx.render("pages/courses_grading.peb", model);
+        }, roles(UserRole.ADMIN));
+
+
+        app.post("/courses/:id/grading", ctx -> {
+            Map<String, List<String>> formParams = ctx.formParamMap();
+
+            if (!checkCSRFToken(ctx, getFormParam(formParams, FormKeys.CSRF_TOKEN)))
+                throw new ForbiddenResponse();
+
+            UUID courseId;
+            try {
+                courseId = UUID.fromString(ctx.pathParam(PathParams.ID));
+            } catch (Exception e) {
+                throw new BadRequestResponse("Bad request");
+            }
+
+            try (DatabaseHandle db = DBMS.openWrite()) {
+                for (Participant participant : db.get().getParticipants()) {
+                    String warning = getFormParam(formParams, participant.getId() + "-warning");
+                    String group = getFormParam(formParams, participant.getId() + "-group");
+                    participant.setWarning(warning);
+                    participant.setGroup(group);
+
+                    List<Chapter> chapters = db.get().getChapters()
+                            .stream()
+                            .filter(chapter -> chapter.getCourseId().equals(courseId))
+                            .collect(Collectors.toUnmodifiableList());
+                    List<Assignment> assignments = db.get().getAssignments()
+                            .stream()
+                            .filter(assignment -> chapters.stream()
+                                    .anyMatch(chapter -> chapter.getId().equals(assignment.getChapterId())))
+                            .collect(Collectors.toUnmodifiableList());
+                    for (Assignment assignment : assignments) {
+                        String scoreFormKey = participant.getId() + "-score-" + assignment.getId();
+                        String scoreFormValueStr = getFormParam(formParams, scoreFormKey);
+
+                        if (scoreFormValueStr == null || scoreFormValueStr.isBlank()) {
+                            db.get().getAssignmentResults().removeIf(ar ->
+                                    ar.getParticipantId().equals(participant.getId()) &&
+                                            ar.getAssignmentId().equals(assignment.getId()));
+                        } else {
+                            int scoreFormValue;
+                            try {
+                                scoreFormValue = Integer.parseInt(scoreFormValueStr);
+                            } catch (IllegalArgumentException e) {
+                                throw new BadRequestResponse();
+                            }
+                            Optional<AssignmentResult> assignmentResult = db.get().getAssignmentResults()
+                                    .stream()
+                                    .filter(ar ->
+                                            ar.getParticipantId().equals(participant.getId()) &&
+                                                    ar.getAssignmentId().equals(assignment.getId()))
+                                    .findAny();
+                            if (assignmentResult.isPresent()) {
+                                assignmentResult.get().setScore(scoreFormValue);
+                            } else {
+                                AssignmentResult newAssignmentResult = new AssignmentResult();
+                                newAssignmentResult.setParticipantId(participant.getId());
+                                newAssignmentResult.setAssignmentId(assignment.getId());
+                                newAssignmentResult.setScore(scoreFormValue);
+                                db.get().getAssignmentResults().add(newAssignmentResult);
+                            }
+                        }
+                    }
+                }
+                DBMS.store();
+            }
+
+            ctx.redirect("/courses/" + courseId + "/grading");
         }, roles(UserRole.ADMIN));
 
 
@@ -267,5 +336,10 @@ public class CoursesRoutes {
                 Database::getCourses,
                 Course::getAdminId
         );
+    }
+
+    private static String getFormParam(Map<String, List<String>> formParams, String key) {
+        List<String> vals = formParams.getOrDefault(key, null);
+        return vals == null ? null : vals.get(0);
     }
 }

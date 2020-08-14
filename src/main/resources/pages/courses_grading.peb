@@ -17,6 +17,7 @@
 <form action="/courses/{{ course.getId() }}/grading" method="post"
     id="main-form"
     class="table-wrapper">
+    {% include "../partials/csrf-input.peb" %}
     <table>
         <thead>
             <tr>
@@ -60,7 +61,8 @@
                     <td>
                         <input name="{{ participant.getId() }}-warning"
                             data-position-x="-3"
-                            data-position-y="{{ participantIndex }}"/>
+                            data-position-y="{{ participantIndex }}"
+                            value="{{ participant.getWarning() }}"/>
                     </td>
                     <td>
                         <button type="submit"
@@ -72,7 +74,9 @@
                     <td>
                         <input name="{{ participant.getId() }}-group"
                             data-position-x="-1"
-                            data-position-y="{{ participantIndex }}"/>
+                            data-position-y="{{ participantIndex }}"
+                            value="{{ participant.getGroup() }}"
+                            style="width: 5rem"/>
                     </td>
                     <td>{{ scorePerParticipant.get(participant.getId()) }}</td>
                     <td>{{ maxScorePerParticipant.get(participant.getId()) }}</td>
@@ -83,7 +87,7 @@
                         <td>
                             <input type="number"
                                 name="{{ participant.getId() }}-score-{{ assignment.getId() }}"
-                                value="{{ assignmentResult ? assignmentResult.getScore() : "" }}"
+                                value="{{ assignmentResult is null ? "" : assignmentResult.getScore() }}"
                                 class="score-input"
                                 data-position-x="{{ loop.index }}"
                                 data-position-y="{{ participantIndex }}"/>
