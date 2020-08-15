@@ -1,5 +1,6 @@
 package easymark.webserver.routes;
 
+import easymark.*;
 import easymark.database.*;
 import easymark.database.models.*;
 import easymark.webserver.*;
@@ -46,14 +47,68 @@ public class IndexRoutes {
                 if (roles.contains(UserRole.ADMIN)) {
                     UUID adminId = ctx.sessionAttribute(SessionKeys.ENTITY_ID);
                     model.put(ModelKeys.ADMIN_ID, adminId);
+                    String uek = null;
+                    try {
+                        uek = getUekFromContext(ctx);
+                    } catch (Exception e) {
+                    }
+                    final String _uek = uek;
+
                     try (DatabaseHandle db = DBMS.openRead()) {
+                        Set<UUID> courseIDs = new HashSet<>();
                         List<Course> courses = db.get()
                                 .getCourses()
                                 .stream()
                                 .filter(course -> adminId.equals(course.getAdminId()))
                                 .sorted(Comparator.comparingInt(Course::getOrdNum))
+                                .peek(course -> {
+                                    courseIDs.add(course.getId());
+                                })
                                 .collect(Collectors.toUnmodifiableList());
                         model.put(ModelKeys.COURSES, courses);
+
+                        List<TestRequest> testRequests = new ArrayList<>();
+                        model.put(ModelKeys.TEST_REQUESTS, testRequests);
+                        Map<UUID, String> chapterNamePerChapter = new HashMap<>();
+                        model.put(ModelKeys.CHAPTER_NAME_PER_CHAPTER, chapterNamePerChapter);
+                        Map<UUID, String> courseNamePerChapter = new HashMap<>();
+                        model.put(ModelKeys.COURSE_NAME_PER_CHAPTER, courseNamePerChapter);
+                        for (Chapter ch : db.get().getChapters()) {
+                            if (courseIDs.contains(ch.getCourseId())) {
+                                List<TestRequest> newTestRequests = db.get().getTestRequests()
+                                        .stream()
+                                        .filter(tr -> tr.getChapterId().equals(ch.getId()))
+                                        .collect(Collectors.toUnmodifiableList());
+                                testRequests.addAll(newTestRequests);
+                                if (newTestRequests.size() > 0) {
+                                    chapterNamePerChapter.put(ch.getId(), ch.getName());
+                                    courseNamePerChapter.computeIfAbsent(ch.getId(), chId -> db.get().getCourses()
+                                            .stream()
+                                            .filter(c -> c.getId().equals(ch.getCourseId()))
+                                            .findAny()
+                                            .orElseThrow()
+                                            .getName());
+                                }
+                            }
+                        }
+
+                        Map<UUID, String> participantNamePerParticipant = new HashMap<>();
+                        model.put(ModelKeys.PARTICIPANT_NAME_PER_PARTICIPANT, participantNamePerParticipant);
+                        testRequests.stream()
+                                .map(TestRequest::getParticipantId)
+                                .distinct()
+                                .map(pId -> db.get().getParticipants()
+                                        .stream()
+                                        .filter(p -> p.getId().equals(pId))
+                                        .findAny()
+                                        .orElseThrow())
+                                .forEach(p -> {
+                                    try {
+                                        participantNamePerParticipant.put(p.getId(), Cryptography.decryptData(p.getName(), p.getNameSalt(), _uek));
+                                    } catch (Exception e) {
+                                        participantNamePerParticipant.put(p.getId(), "Decryption failure");
+                                    }
+                                });
                     }
                     ctx.render("pages/index.admin.peb", model);
                     return;

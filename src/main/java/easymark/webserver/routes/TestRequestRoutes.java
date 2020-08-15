@@ -56,5 +56,28 @@ public class TestRequestRoutes {
 
             ctx.redirect("/");
         }, roles(UserRole.PARTICIPANT));
+
+
+        app.post("/test-requests/:id/delete", ctx -> {
+            if (!checkCSRFToken(ctx, ctx.formParam(FormKeys.CSRF_TOKEN)))
+                throw new ForbiddenResponse();
+
+            UUID testRequestId;
+            try {
+                testRequestId = UUID.fromString(ctx.pathParam(PathParams.ID));
+            } catch (Exception e) {
+                throw new BadRequestResponse("Bad request");
+            }
+
+            try (DatabaseHandle db = DBMS.openWrite()) {
+                boolean didExist = db.get().getTestRequests()
+                        .removeIf(tr -> tr.getId().equals(testRequestId));
+                if (!didExist)
+                    throw new NotFoundResponse();
+                DBMS.store();
+            }
+
+            ctx.redirect("/");
+        }, roles(UserRole.ADMIN));
     }
 }

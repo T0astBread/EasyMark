@@ -29,4 +29,8 @@ public class ModelKeys {
     public static final String ASSIGNMENT_RESULT_PER_ASSIGNMENT = "assignmentResultPerAssignment";
     public static final String TEST_ASSIGNMENT_PER_CHAPTER = "testAssignmentPerChapter";
     public static final String CHAPTERS_WITH_TEST_REQUESTS = "chaptersWithTestRequests";
+    public static final String TEST_REQUESTS = "testRequests";
+    public static final String CHAPTER_NAME_PER_CHAPTER = "chapterNamePerChapter";
+    public static final String PARTICIPANT_NAME_PER_PARTICIPANT = "participantNamePerParticipant";
+    public static final String COURSE_NAME_PER_CHAPTER = "courseNamePerChapter";
 }

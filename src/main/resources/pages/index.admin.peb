@@ -5,6 +5,7 @@
 {% set pageName="index-admin" %}
 
 {% block content %}
+<div id="courses">
     <h1>Courses</h1>
     {% if courses.size() == 0 %}
         <p>No courses</p>
@@ -36,4 +37,24 @@
         {% include "../partials/csrf-input.peb" %}
         <button type="submit">Add course</button>
     </form>
+</div>
+<div id="test-requests">
+    <h1>Test requests</h1>
+    <ul>
+    {% for testRequest in testRequests %}
+        <li>
+            <strong>{{ participantNamePerParticipant.get(testRequest.getParticipantId()) }}</strong>
+            on
+            <strong>{{ chapterNamePerChapter.get(testRequest.getChapterId()) }}</strong><br>
+            in {{ courseNamePerChapter.get(testRequest.getChapterId()) }}
+            <form action="/test-requests/{{ testRequest.getId() }}/delete" method="post">
+                <button type="submit"
+                    class="symbol remove-button"
+                    >❌</button>
+                {% include "../partials/csrf-input.peb" %}
+            </form>
+        </li>
+    {% endfor %}
+    </ul>
+</div>
 {% endblock %}

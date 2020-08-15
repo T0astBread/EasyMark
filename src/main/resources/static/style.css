@@ -205,6 +205,45 @@ form.add {
     color: #d70071;
 }
 
+#page-index-admin main {
+    display: flex;
+    flex-direction: row;
+    background: none;
+}
+
+#page-index-admin main > * {
+    padding: 0 1rem;
+    margin: 0;
+    background: white;
+}
+
+#page-index-admin main > :not(:last-child) {
+    margin-right: .5rem;
+}
+
+#page-index-admin #test-requests {
+    flex-grow: 1;
+}
+
+#page-index-admin #test-requests form {
+    display: inline;
+    padding: 0;
+    margin: 0;
+}
+
+#page-index-admin #test-requests .remove-button {
+    display: inline;
+    padding: 0;
+    margin: 0;
+    vertical-align: top;
+    -moz-appearance: none;
+    -webkit-appearance: none;
+    appearance: none;
+    background: none;
+    border: none;
+    box-shadow: none;
+}
+
 #page-courses-show h2,
 #page-courses-show h3,
 #page-courses-show ul {
