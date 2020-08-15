@@ -12,7 +12,7 @@
             {% set assignmentResult=assignmentResultPerAssignment.get(assignment.getId()) %}
             {% set done=assignmentResult is not null %}
             <li>
-                <h3>{{ assignment.getName() }}</h3>
+                <h3>{% include "../partials/assignment-link.peb" %}</h3>
                 {% if done %}
                     <span><span class="done">Done</span>; Reached <strong>{{ assignmentResult.getScore() }} of {{ assignment.getMaxScore() }} points</strong></span>
                 {% else %}

@@ -42,7 +42,9 @@
                         <th title="{{ assignment.getName() }}">
                             <div style="width: 100%; display: inline-flex; flex-direction: row">
                                 <div style="flex: 1 1 0; min-width: 0; width: 0">
-                                    <div style="text-overflow: ellipsis; overflow: hidden">{{ assignment.getName() }}</div>
+                                    <div style="text-overflow: ellipsis; overflow: hidden">
+                                        {% include "../partials/assignment-link.peb" %}
+                                    </div>
                                 </div>
                             </div>
                         </th>

@@ -55,12 +55,13 @@ public class AssignmentsRoutes {
                         .filter(c -> c.getId().equals(assignmentId))
                         .findAny()
                         .orElseThrow(() -> new NotFoundResponse("Assignment not found"));
-                assignment.setName(ctx.formParam(FormKeys.NAME));
                 try {
                     assignment.setMaxScore(Integer.parseInt(ctx.formParam(FormKeys.MAX_SCORE)));
                 } catch (Exception e) {
                     throw new BadRequestResponse("Max. score must be a number");
                 }
+                assignment.setName(ctx.formParam(FormKeys.NAME));
+                assignment.setLink(ctx.formParam(FormKeys.LINK));
                 DBMS.store();
             }
 
@@ -76,10 +77,13 @@ public class AssignmentsRoutes {
                 (db, ctx, groupId) -> {
                     Assignment newAssignment = new Assignment();
                     newAssignment.setChapterId(groupId);
-                    newAssignment.setName(ctx.formParam(FormKeys.NAME));
                     try {
                         newAssignment.setMaxScore(Integer.parseInt(ctx.formParam(FormKeys.MAX_SCORE)));
-                    } catch (Exception e) {}
+                    } catch (Exception e) {
+                        throw new BadRequestResponse("Max. score must be a number");
+                    }
+                    newAssignment.setName(ctx.formParam(FormKeys.NAME));
+                    newAssignment.setLink(ctx.formParam(FormKeys.LINK));
                     return newAssignment;
                 },
 

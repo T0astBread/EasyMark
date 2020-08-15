@@ -1,0 +1,5 @@
+{% if assignment.getLink() is null or assignment.getLink().isBlank() %}
+    <span>{{ assignment.getName() }}</span>
+{% else %}
+    <a href="{{ assignment.getLink() }}" rel="noreferrer noopener" target="_blank">{{ assignment.getName() }}</a>
+{% endif %}

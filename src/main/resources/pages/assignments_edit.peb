@@ -13,6 +13,12 @@
         name="maxScore"
         value="{{ assignment.getMaxScore() }}"
         required/>
+    <label for="link">External link: </label>
+    <input type="url"
+        id="link"
+        name="link"
+        value="{{ assignment.getLink() }}"
+        size="25"/>
     <input type="hidden"
         name="redirectUrl"
         value="{{ redirectUrl }}"/>

@@ -34,7 +34,7 @@
         {% for assignment in assignmentsPerChapter.get(chapter.getId()) %}
             <li>
                 <div class="ordered-list-row">
-                    {{ assignment.getName() }}
+                    {% include "../partials/assignment-link.peb" %}
                     {% include "../partials/ordered-list-buttons.peb" with {
                         "entitySetName": "assignments",
                         "entity": assignment,
@@ -64,6 +64,11 @@
                 placeholder="Max. Score"
                 title="Max. Score"
                 required/>
+            <input type="url"
+                name="link"
+                placeholder="External link"
+                title="External link"
+                size="25"/>
             <input type="hidden"
                 name="groupId"
                 value="{{ chapter.getId() }}"/>

@@ -6,6 +6,7 @@ public class Assignment extends Entity implements Ordered {
     private String name;
     private int maxScore;
     private int ordNum;
+    private String link;
     private UUID chapterId;
 
     public String getName() {
@@ -30,6 +31,14 @@ public class Assignment extends Entity implements Ordered {
 
     public void setOrdNum(int ordNum) {
         this.ordNum = ordNum;
+    }
+
+    public String getLink() {
+        return link;
+    }
+
+    public void setLink(String link) {
+        this.link = link;
     }
 
     public UUID getChapterId() {

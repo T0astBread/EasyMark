@@ -10,4 +10,5 @@ public class FormKeys {
     public static final String GROUP_ID = "groupId";
     public static final String WARNING = "warning";
     public static final String GROUP = "group";
+    public static final String LINK = "link";
 }
