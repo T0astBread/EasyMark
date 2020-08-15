@@ -13,43 +13,47 @@ const scrollIntoView = elem => {
     })
 }
 
+const moveFocus = (elem, right, up) => {
+    const x = parseInt(elem.getAttribute("data-position-x"))
+    const y = parseInt(elem.getAttribute("data-position-y"))
+    if (x == null || y == null)
+        return
+
+    const selector = `input[data-position-x="${x+right}"][data-position-y="${y-up}"], button[data-position-x="${x+right}"][data-position-y="${y-up}"]`
+    const newFocused = document.querySelector(selector)
+    if (newFocused != null) {
+        newFocused.focus()
+        scrollIntoView(newFocused)
+    }
+}
+
 const handleKeyPress = evt => {
     const elem = evt.currentTarget
 
-    const doThing = (right, up) => {
-        const x = parseInt(elem.getAttribute("data-position-x"))
-        const y = parseInt(elem.getAttribute("data-position-y"))
-        if (x == null || y == null)
-            return
-
-        const selector = `input[data-position-x="${x+right}"][data-position-y="${y-up}"], button[data-position-x="${x+right}"][data-position-y="${y-up}"]`
-        const newFocused = document.querySelector(selector)
-        if (newFocused != null) {
-            newFocused.focus()
-        }
-
-        evt.preventDefault()
-    }
-
-    if (!evt.shiftKey) {
+    if (evt.ctrlKey && elem.tagName === "INPUT" || elem.tagName === "BUTTON") {
         switch (evt.key) {
             case "ArrowUp":
-                doThing(0, 1)
+                moveFocus(elem, 0, 1)
                 break
             case "ArrowDown":
-                doThing(0, -1)
+                moveFocus(elem, 0, -1)
                 break
             case "ArrowLeft":
-                doThing(-1, 0)
+                moveFocus(elem, -1, 0)
                 break
             case "ArrowRight":
-                doThing(1, 0)
+                moveFocus(elem, 1, 0)
                 break
+            case "m":
+                scrollIntoView(elem)
+                break
+            default:
+                return
         }
+        evt.preventDefault()
     }
 }
 
 document.querySelectorAll("table input, table button").forEach(elem => {
     elem.addEventListener("keydown", handleKeyPress)
-    elem.addEventListener("focus", evt => scrollIntoView(evt.currentTarget))
 })
