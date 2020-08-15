@@ -9,4 +9,5 @@ public class SessionKeys {
     public static final String SEK_SALT = "sekSalt";
     public static final String NAME_DISPLAY = "nameDisplay";
     public static final String AT_DISPLAY = "atDisplay";
+    public static final String ADMIN_ID = "adminId";
 }

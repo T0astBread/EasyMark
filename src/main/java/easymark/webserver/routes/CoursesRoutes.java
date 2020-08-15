@@ -150,8 +150,12 @@ public class CoursesRoutes {
                                 assignmentResultPerAssignment.put(assignmentResult.getAssignmentId(), assignmentResult);
 
                             if (_uek != null) {
-                                String name = Cryptography.decryptData(participant.getName(), participant.getNameSalt(), _uek);
-                                namePerParticipant.put(participant.getId(), name);
+                                try {
+                                    String name = Cryptography.decryptData(participant.getName(), participant.getNameSalt(), _uek);
+                                    namePerParticipant.put(participant.getId(), name);
+                                } catch (Exception e) {
+                                    namePerParticipant.put(participant.getId(), "Decryption failure");
+                                }
                             } else {
                                 namePerParticipant.put(participant.getId(), "Decryption failure");
                             }

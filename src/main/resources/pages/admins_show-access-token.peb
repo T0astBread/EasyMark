@@ -1,0 +1,8 @@
+{% extends "../partials/page.peb" %}
+
+{% block content %}
+<p>New access token for <strong>{{ adminId }}:</strong></p>
+<p><strong id="cat">{{ newAt }}</strong></p>
+<p><small>Copy/forward/share this now, you will never see it again.</small></p>
+<a href="{{ redirectUrl }}">Continue</a>
+{% endblock %}

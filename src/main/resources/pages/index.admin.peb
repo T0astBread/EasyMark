@@ -1,8 +1,12 @@
 {% extends "../partials/page.peb" %}
 
 {% set currentUrl="/" %}
-
 {% set pageName="index-admin" %}
+
+{% block headerButtonsLeft %}
+<a href="/settings">Settings</a>
+{% endblock %}
+
 
 {% block content %}
 <div id="courses">

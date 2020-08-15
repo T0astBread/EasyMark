@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.*;
 import java.util.stream.*;
 
 import static easymark.webserver.WebServerUtils.*;
+import static io.javalin.core.security.SecurityUtil.roles;
 
 public class IndexRoutes {
     public static void configure(Javalin app) {
@@ -192,5 +193,31 @@ public class IndexRoutes {
             }
             ctx.render("pages/index.peb", model);
         });
+
+
+        app.get("/settings", ctx -> {
+            List<Admin> admins;
+            try (DatabaseHandle db = DBMS.openRead()) {
+                admins = db.get().getAdmins();
+            }
+
+            UUID entityId = ctx.sessionAttribute(SessionKeys.ENTITY_ID);
+            if (entityId == null)
+                throw new InternalServerErrorResponse();
+
+            Map<UUID, List<Course>> coursesPerAdmin;
+            try (DatabaseHandle db = DBMS.openRead()) {
+                coursesPerAdmin = db.get().getCourses()
+                        .stream()
+                        .collect(Collectors.groupingBy(Course::getAdminId));
+            }
+
+            ctx.render("pages/settings.peb", Map.of(
+                    ModelKeys.ADMINS, admins,
+                    ModelKeys.ENTITY_ID, entityId,
+                    ModelKeys.COURSES_PER_ADMIN, coursesPerAdmin,
+                    ModelKeys.CSRF_TOKEN, makeCSRFToken(ctx)
+            ));
+        }, roles(UserRole.ADMIN));
     }
 }

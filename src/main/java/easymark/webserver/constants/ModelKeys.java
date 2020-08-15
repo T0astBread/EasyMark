@@ -33,4 +33,7 @@ public class ModelKeys {
     public static final String CHAPTER_NAME_PER_CHAPTER = "chapterNamePerChapter";
     public static final String PARTICIPANT_NAME_PER_PARTICIPANT = "participantNamePerParticipant";
     public static final String COURSE_NAME_PER_CHAPTER = "courseNamePerChapter";
+    public static final String ADMINS = "admins";
+    public static final String ENTITY_ID = "entityId";
+    public static final String COURSES_PER_ADMIN = "coursesPerAdmin";
 }

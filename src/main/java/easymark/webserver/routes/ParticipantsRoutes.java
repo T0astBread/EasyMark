@@ -97,7 +97,12 @@ public class ParticipantsRoutes {
                         .orElseThrow(NotFoundResponse::new);
             }
             String uek = getUekFromContext(ctx);
-            String name = Cryptography.decryptData(participant.getName(), participant.getNameSalt(), uek);
+            String name;
+            try {
+                name = Cryptography.decryptData(participant.getName(), participant.getNameSalt(), uek);
+            } catch (Exception e) {
+                name = "Decryption failure";
+            }
 
             Map<String, Object> model = new HashMap<>();
             model.put(ModelKeys.DELETE_URL, "/participants/" + participantId + "/delete");
@@ -156,8 +161,12 @@ public class ParticipantsRoutes {
                         .orElseThrow(NotFoundResponse::new);
             }
 
-            String name = Cryptography.decryptData(participant.getName(), participant.getNameSalt(), uek);
-
+            String name;
+            try {
+                name = Cryptography.decryptData(participant.getName(), participant.getNameSalt(), uek);
+            } catch (Exception e) {
+                name = "Decryption failure";
+            }
             Map<String, Object> model = new HashMap<>();
             model.put(ModelKeys.PARTICIPANT, participant);
             model.put(ModelKeys.NAME, name);

@@ -1,0 +1,21 @@
+{% extends "../partials/page.peb" %}
+
+{% block content %}
+<p>You are about to reset the access token for <strong>{{ adminId }}.</strong></p>
+<p>If you do not provide the old access token all encrypted data
+(participant names) of that admin will be inaccessible.</p>
+<form action="/admins/{{ adminId }}/reset-access-token" method="post">
+    <label for="oldAccessToken">Old access token:</label>
+    <input id="oldAccessToken"
+        type="password"
+        name="oldAccessToken"/>
+    <br>
+    <br>
+    <a href="{{ cancelUrl }}">Cancel</a>
+    <button type="submit">Reset access token</button>
+    <input type="hidden"
+        name="redirectUrl"
+        value="{{ redirectUrl }}"/>
+    {% include "../partials/csrf-input.peb" %}
+</form>
+{% endblock %}

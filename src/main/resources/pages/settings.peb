@@ -1,0 +1,37 @@
+{% extends "../partials/page.peb" %}
+
+{% block content %}
+<h1>Server Settings</h1>
+<h2>Admins</h2>
+<ul>
+    {% for admin in admins %}
+    <li>
+        <div>
+            <span>{{ admin.getId() }}</span>
+            {% if admin.getId() equals entityId %}
+                <strong><- YOU</strong>
+            {% endif %}
+        </div>
+        <div>
+            <span>owns</span>
+            {% set administeredCourses=coursesPerAdmin.get(admin.getId()) %}
+            {% if administeredCourses is null or administeredCourses.length == 0 %}
+                <span>no courses</span>
+            {% else %}
+                <strong>
+                {% for course in administeredCourses %}
+                    {{ course.getName() }}{{ loop.last ? "" : "," }}
+                {% endfor %}
+                </strong>
+            {% endif %}
+        </div>
+        <a href="/admins/{{ admin.getId() }}/reset-access-token?cancelUrl=/settings&redirectUrl=/settings">Reset access token</a>
+        <a href="/admins/{{ admin.getId() }}/confirm-delete?redirectUrl=settings&cancelUrl=/settings">Delete</a>
+    </li>
+    {% endfor %}
+</ul>
+<form action="/admins?redirectUrl=/settings" method="post">
+    <button type="submit">Create new admin</button>
+    {% include "../partials/csrf-input.peb" %}
+</form>
+{% endblock %}
