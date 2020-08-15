@@ -87,6 +87,13 @@ public class AssignmentsRoutes {
                     return newAssignment;
                 },
 
+                (db, entityId) -> "assignment \"" + db.getAssignments()
+                        .stream()
+                        .filter(course -> course.getId().equals(entityId))
+                        .findAny()
+                        .orElseThrow(NotFoundResponse::new)
+                        .getName() + "\" including all associated results",
+
                 (db, entityId, ctx) -> {
                     Assignment assignment = db.getAssignments()
                             .stream()

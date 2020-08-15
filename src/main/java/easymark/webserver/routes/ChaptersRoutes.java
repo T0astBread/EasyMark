@@ -55,6 +55,39 @@ public class ChaptersRoutes {
             ctx.redirect("/courses/" + courseId);
         }, roles(UserRole.ADMIN));
 
+
+        app.get("/chapters/:id/confirm-delete", ctx -> {
+            UUID chapterId;
+            try {
+                chapterId = UUID.fromString(ctx.pathParam(PathParams.ID));
+            } catch (Exception e) {
+                throw new BadRequestResponse();
+            }
+
+            String redirectUrl = ctx.queryParam(QueryKeys.RECIRECT_URL);
+            String cancelUrl = ctx.queryParam(QueryKeys.CANCEL_URL);
+            if (redirectUrl == null || cancelUrl == null)
+                throw new BadRequestResponse();
+
+            Chapter chapter;
+            try (DatabaseHandle db = DBMS.openRead()) {
+                chapter = db.get().getChapters()
+                        .stream()
+                        .filter(c -> c.getId().equals(chapterId))
+                        .findAny()
+                        .orElseThrow(() -> new NotFoundResponse("Chapter not found"));
+            }
+
+            ctx.render("pages/confirm-delete.peb", Map.of(
+                    ModelKeys.DELETE_URL, "/chapters/" + chapterId + "?action=delete",
+                    ModelKeys.DELETE_ENTITY_NAME, "chapter \"" + chapter.getName() + "\" including all associated test requests, assignments and assignment results",
+                    ModelKeys.REDIRECT_URL, redirectUrl,
+                    ModelKeys.CANCEL_URL, cancelUrl,
+                    ModelKeys.CSRF_TOKEN, makeCSRFToken(ctx)
+            ));
+        }, roles(UserRole.ADMIN));
+
+
         app.post("/chapters/:id", ctx -> {
             if (!checkCSRFToken(ctx, ctx.formParam(FormKeys.CSRF_TOKEN)))
                 throw new ForbiddenResponse("Forbidden");

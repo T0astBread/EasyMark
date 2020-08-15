@@ -6,13 +6,8 @@
         class="symbol"
         style="font-size: .6em">✏️</a>
 {% endif %}
-<form action="/{{ entitySetName }}/{{ entity.getID() }}?action=delete" method="post">
-    <input type="hidden"
-        name="redirectUrl"
-        value="{{ currentUrl }}"/>
-    {% include "../partials/csrf-input.peb" %}
-    <button type="submit" class="symbol">❌</button>
-</form>
+<a href="/{{ entitySetName }}/{{ entity.getID() }}/confirm-delete?redirectUrl={{ currentUrl }}&cancelUrl={{ currentUrl }}"
+    class="symbol">❌</a>
 {% if not loop.first %}
     <form action="/{{ entitySetName }}/{{ entity.getID() }}?action=move-up" method="post">
         <input type="hidden"

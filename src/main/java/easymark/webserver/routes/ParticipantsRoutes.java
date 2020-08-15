@@ -101,7 +101,7 @@ public class ParticipantsRoutes {
 
             Map<String, Object> model = new HashMap<>();
             model.put(ModelKeys.DELETE_URL, "/participants/" + participantId + "/delete");
-            model.put(ModelKeys.DELETE_ENTITY_NAME, name + " from course " + course.getName());
+            model.put(ModelKeys.DELETE_ENTITY_NAME, name + " from course " + course.getName() + " including all associated test requests and assignment results");
             model.put(ModelKeys.CANCEL_URL, "/courses/" + course.getId() + "/grading");
             model.put(ModelKeys.REDIRECT_URL, "/courses/" + course.getId() + "/grading");
             model.put(ModelKeys.CSRF_TOKEN, makeCSRFToken(ctx));

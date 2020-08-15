@@ -9,13 +9,9 @@
         <a href="/courses/{{ course.getId() }}/edit"
             class="symbol"
             style="font-size: .6em">✏️</a>
-        <form action="/courses/{{ course.getId() }}?action=delete" method="post">
-            <input type="hidden"
-                name="redirectUrl"
-                value="/"/>
-            {% include "../partials/csrf-input.peb" %}
-            <button type="submit" class="symbol">❌</button>
-        </form>
+        <a href="/courses/{{ course.getId() }}/confirm-delete?redirectUrl=/&cancelUrl={{ currentUrl }}"
+            class="symbol"
+            style="font-size: .6em">❌</a>
     </div>
     <p>
         <a href="/courses/{{ course.getId() }}/grading">Edit participants and grading...</a>

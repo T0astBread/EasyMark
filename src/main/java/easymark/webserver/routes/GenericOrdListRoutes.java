@@ -11,6 +11,7 @@ import java.util.*;
 import java.util.function.*;
 
 import static easymark.webserver.WebServerUtils.checkCSRFToken;
+import static easymark.webserver.WebServerUtils.makeCSRFToken;
 import static io.javalin.core.security.SecurityUtil.roles;
 
 public class GenericOrdListRoutes {
@@ -20,7 +21,9 @@ public class GenericOrdListRoutes {
 
             CreateFunction<E> createFunction,
 
+            DeleteEntityNameFunction deleteEntityNameFunction,
             DeleteFunction deleteFunction,
+
             Function<Database, List<E>> tableGetter,
             Function<E, UUID> groupSelector
     ) {
@@ -106,11 +109,46 @@ public class GenericOrdListRoutes {
             String redirectUrl = ctx.formParam(FormKeys.REDIRECT_URL);
             ctx.redirect(redirectUrl == null ? "/" : redirectUrl);
         }, roles(UserRole.ADMIN));
+
+
+        app.get("/" + thing + "/:id/confirm-delete", ctx -> {
+            UUID entityId;
+            try {
+                entityId = UUID.fromString(ctx.pathParam(PathParams.ID));
+            } catch (Exception e) {
+                throw new BadRequestResponse();
+            }
+
+            String cancelUrl = ctx.queryParam(QueryKeys.CANCEL_URL);
+            String redirectUrl = ctx.queryParam(QueryKeys.RECIRECT_URL);
+            String deleteUrl = "/" + thing + "/" + entityId + "?action=delete";
+
+            if (redirectUrl == null || cancelUrl == null)
+                throw new BadRequestResponse();
+
+            String entityName;
+            try (DatabaseHandle db = DBMS.openRead()) {
+                entityName = deleteEntityNameFunction.run(db.get(), entityId);
+            }
+
+            ctx.render("pages/confirm-delete.peb", Map.of(
+                    ModelKeys.DELETE_URL, deleteUrl,
+                    ModelKeys.DELETE_ENTITY_NAME, entityName,
+                    ModelKeys.REDIRECT_URL, redirectUrl,
+                    ModelKeys.CANCEL_URL, cancelUrl,
+                    ModelKeys.CSRF_TOKEN, makeCSRFToken(ctx)
+            ));
+        }, roles(UserRole.ADMIN));
     }
 
     @FunctionalInterface
     public interface CreateFunction<E> {
         E run(Database db, Context ctx, UUID groupId);
+    }
+
+    @FunctionalInterface
+    public interface DeleteEntityNameFunction {
+        String run(Database db, UUID entityId);
     }
 
     @FunctionalInterface

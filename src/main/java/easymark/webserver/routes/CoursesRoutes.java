@@ -323,6 +323,13 @@ public class CoursesRoutes {
                     return newCourse;
                 },
 
+                (db, entityId) -> "course \"" + db.getCourses()
+                        .stream()
+                        .filter(course -> course.getId().equals(entityId))
+                        .findAny()
+                        .orElseThrow(NotFoundResponse::new)
+                        .getName() + "\" including all associated participants, chapters, test requests, assignments and assignment results",
+
                 (db, courseId, ctx) -> {
                     db.getChapters().removeAll(db.getChapters()
                             .stream()
