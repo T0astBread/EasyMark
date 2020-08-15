@@ -44,6 +44,24 @@
                 </div>
             </li>
         {% endfor %}
+        {% set testAssignment=testAssignmentPerChapter.get(chapter.getId()) %}
+        {% if testAssignment is not null %}
+            <li>
+                <div class="ordered-list-row test-assignment">
+                    {% include "../partials/assignment-link.peb" with {"assignment": testAssignment} %}
+                    <a href="/assignments/{{ testAssignment.getId() }}/edit?redirectUrl={{ currentUrl }}"
+                        class="symbol"
+                        style="font-size: .6em">✏️</a>
+                    <form action="/assignments/{{ testAssignment.getId() }}?action=delete" method="post">
+                        <input type="hidden"
+                            name="redirectUrl"
+                            value="{{ currentUrl }}"/>
+                        {% include "../partials/csrf-input.peb" %}
+                        <button type="submit" class="symbol">❌</button>
+                    </form>
+                </div>
+            </li>
+        {% endif %}
         </ul>
         {% set addToggleId="add-toggle-" + chapter.getID() %}
         <input type="checkbox"
@@ -86,6 +104,10 @@
             title="Chapter name"
             size="50"
             required/>
+        <input type="checkbox"
+            name="testRequired"
+            id="{{ chapter.getId() }}-testRequired"/>
+        <label for="{{ chapter.getId() }}-testRequired">Test required</label>
         <input type="hidden"
             name="courseId"
             value="{{ course.getId() }}"/>

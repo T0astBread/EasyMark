@@ -26,6 +26,8 @@ public class ChaptersRoutes {
                 throw new BadRequestResponse();
             }
 
+            boolean testRequired = "on".equalsIgnoreCase(ctx.formParam(FormKeys.TEST_REQUIRED));
+
             try (DatabaseHandle db = DBMS.openWrite()) {
                 int maxOrdNum = db.get().getChapters()
                         .stream()
@@ -39,6 +41,15 @@ public class ChaptersRoutes {
                 newChapter.setName(ctx.formParam(FormKeys.NAME));
                 newChapter.setOrdNum(maxOrdNum + 1);
                 db.get().getChapters().add(newChapter);
+
+                if (testRequired) {
+                    Assignment newTestAssignment = new Assignment();
+                    newTestAssignment.setChapterId(newChapter.getId());
+                    newTestAssignment.setName("Test");
+                    db.get().getAssignments().add(newTestAssignment);
+                    newChapter.setTestAssignmentId(newTestAssignment.getId());
+                }
+
                 DBMS.store();
             }
             ctx.redirect("/courses/" + courseId);
@@ -136,13 +147,34 @@ public class ChaptersRoutes {
                 throw new BadRequestResponse("Bad request");
             }
 
+            boolean testRequired = "on".equalsIgnoreCase(ctx.formParam(FormKeys.TEST_REQUIRED));
+
             try (DatabaseHandle db = DBMS.openWrite()) {
                 Chapter chapter = db.get().getChapters()
                         .stream()
                         .filter(c -> c.getId().equals(chapterId))
                         .findAny()
                         .orElseThrow(() -> new NotFoundResponse("Chapter not found"));
+
                 chapter.setName(ctx.formParam(FormKeys.NAME));
+
+                UUID testAssignmentId = chapter.getTestAssignmentId();
+                if (testRequired) {
+                    if (testAssignmentId == null) {
+                        Assignment newTestAssignment = new Assignment();
+                        newTestAssignment.setChapterId(chapterId);
+                        newTestAssignment.setName("Test");
+                        db.get().getAssignments().add(newTestAssignment);
+                        chapter.setTestAssignmentId(newTestAssignment.getId());
+                    }
+                } else {
+                    if (testAssignmentId != null) {
+                        db.get().getAssignments()
+                                .removeIf(a -> a.getId().equals(testAssignmentId));
+                        chapter.setTestAssignmentId(null);
+                    }
+                }
+
                 DBMS.store();
             }
 

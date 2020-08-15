@@ -30,6 +30,7 @@ public class CoursesRoutes {
             Optional<Course> course;
             List<Chapter> chapters;
             Map<UUID, List<Assignment>> assignmentsPerChapter;
+            Map<UUID, Assignment> testAssignmentPerChapter;
             try (DatabaseHandle db = DBMS.openRead()) {
                 course = db.get().getCourses()
                         .stream()
@@ -42,6 +43,7 @@ public class CoursesRoutes {
                     throw new ForbiddenResponse("You are not the admin of this course");
 
                 assignmentsPerChapter = new HashMap<>();
+                testAssignmentPerChapter = new HashMap<>();
                 chapters = db.get().getChapters()
                         .stream()
                         .filter(chapter -> chapter.getCourseId().equals(courseId))
@@ -49,6 +51,12 @@ public class CoursesRoutes {
                             List<Assignment> assignments = db.get().getAssignments()
                                     .stream()
                                     .filter(assignment -> assignment.getChapterId().equals(chapter.getId()))
+                                    .filter(assignment -> {
+                                        boolean isTestAssignment = assignment.getId().equals(chapter.getTestAssignmentId());
+                                        if (isTestAssignment)
+                                            testAssignmentPerChapter.put(chapter.getId(), assignment);
+                                        return !isTestAssignment;
+                                    })
                                     .sorted(Comparator.comparingInt(Assignment::getOrdNum))
                                     .collect(Collectors.toUnmodifiableList());
                             assignmentsPerChapter.put(chapter.getId(), assignments);
@@ -61,7 +69,8 @@ public class CoursesRoutes {
                     ModelKeys.CSRF_TOKEN, makeCSRFToken(ctx),
                     ModelKeys.COURSE, course.get(),
                     ModelKeys.CHAPTERS, chapters,
-                    ModelKeys.ASSIGNMENTS_PER_CHAPTER, assignmentsPerChapter
+                    ModelKeys.ASSIGNMENTS_PER_CHAPTER, assignmentsPerChapter,
+                    ModelKeys.TEST_ASSIGNMENT_PER_CHAPTER, testAssignmentPerChapter
             ));
         }, roles(UserRole.ADMIN));
 

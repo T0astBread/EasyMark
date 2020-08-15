@@ -36,6 +36,7 @@ public class WebServer {
         ChaptersRoutes.configure(app);
         AssignmentsRoutes.configure(app);
         ParticipantsRoutes.configure(app);
+        TestRequestRoutes.configure(app);
 
         return app;
     }

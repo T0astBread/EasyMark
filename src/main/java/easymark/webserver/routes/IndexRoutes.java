@@ -9,6 +9,7 @@ import io.javalin.http.*;
 
 import java.time.*;
 import java.util.*;
+import java.util.concurrent.atomic.*;
 import java.util.stream.*;
 
 import static easymark.webserver.WebServerUtils.*;
@@ -63,6 +64,8 @@ public class IndexRoutes {
                     List<Chapter> chapters;
                     Map<UUID, List<Assignment>> assignmentsPerChapter;
                     Map<UUID, AssignmentResult> assignmentResultPerAssignment = new HashMap<>();
+                    Map<UUID, Assignment> testAssignmentPerChapter = new HashMap<>();
+                    Set<UUID> chaptersWithTestRequests = new HashSet<>();
                     try (DatabaseHandle db = DBMS.openRead()) {
                         UUID courseId = db.get().getParticipants()
                                 .stream()
@@ -80,19 +83,41 @@ public class IndexRoutes {
                                 .stream()
                                 .filter(chapter -> chapter.getCourseId().equals(courseId))
                                 .peek(chapter -> {
+                                    AtomicReference<Assignment> testAssignment = new AtomicReference<>();
+
                                     List<Assignment> assignments = db.get().getAssignments()
                                             .stream()
                                             .filter(assignment -> assignment.getChapterId().equals(chapter.getId()))
+                                            .filter(assignment -> {
+                                                boolean isTestAssignment = assignment.getId().equals(chapter.getTestAssignmentId());
+                                                if (isTestAssignment) {
+                                                    testAssignmentPerChapter.put(chapter.getId(), assignment);
+                                                    testAssignment.set(assignment);
+                                                }
+                                                return !isTestAssignment;
+                                            })
                                             .sorted(Comparator.comparingInt(Assignment::getOrdNum))
                                             .collect(Collectors.toUnmodifiableList());
                                     assignmentsPerChapter.put(chapter.getId(), assignments);
 
-                                    for (Assignment a : assignments) {
+                                    Stream.concat(
+                                            assignments.stream(),
+                                            Stream.ofNullable(testAssignment.get())
+                                    ).forEach(a -> {
                                         db.get().getAssignmentResults()
                                                 .stream()
                                                 .filter(ar -> ar.getParticipantId().equals(participantId) && a.getId().equals(ar.getAssignmentId()))
                                                 .findAny()
                                                 .ifPresent(ar -> assignmentResultPerAssignment.put(a.getId(), ar));
+                                    });
+
+                                    if (chapter.getTestAssignmentId() != null) {
+                                        boolean hasTestRequest = db.get().getTestRequests()
+                                                .stream()
+                                                .anyMatch(tr -> tr.getChapterId().equals(chapter.getId()) &&
+                                                        tr.getParticipantId().equals(participantId));
+                                        if (hasTestRequest)
+                                            chaptersWithTestRequests.add(chapter.getId());
                                     }
                                 })
                                 .sorted(Comparator.comparingInt(Chapter::getOrdNum))
@@ -102,6 +127,9 @@ public class IndexRoutes {
                     model.put(ModelKeys.CHAPTERS, chapters);
                     model.put(ModelKeys.ASSIGNMENTS_PER_CHAPTER, assignmentsPerChapter);
                     model.put(ModelKeys.ASSIGNMENT_RESULT_PER_ASSIGNMENT, assignmentResultPerAssignment);
+                    model.put(ModelKeys.TEST_ASSIGNMENT_PER_CHAPTER, testAssignmentPerChapter);
+                    model.put(ModelKeys.CHAPTERS_WITH_TEST_REQUESTS, chaptersWithTestRequests);
+                    model.put(ModelKeys.CSRF_TOKEN, makeCSRFToken(ctx));
                     ctx.render("pages/index.participant.peb", model);
                     return;
                 }

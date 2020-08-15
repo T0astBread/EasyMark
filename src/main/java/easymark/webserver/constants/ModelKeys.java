@@ -27,4 +27,6 @@ public class ModelKeys {
     public static final String CANCEL_URL = "cancelUrl";
     public static final String PARTICIPANT = "participant";
     public static final String ASSIGNMENT_RESULT_PER_ASSIGNMENT = "assignmentResultPerAssignment";
+    public static final String TEST_ASSIGNMENT_PER_CHAPTER = "testAssignmentPerChapter";
+    public static final String CHAPTERS_WITH_TEST_REQUESTS = "chaptersWithTestRequests";
 }

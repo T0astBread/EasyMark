@@ -195,6 +195,16 @@ form.add {
     content: "❌";
 }
 
+.test-assignment,
+.test-assignment a:link,
+.test-assignment a:hover,
+.test-assignment a:visited,
+.test-assignment a:active {
+    text-transform: uppercase;
+    font-weight: bold;
+    color: #d70071;
+}
+
 #page-courses-show h2,
 #page-courses-show h3,
 #page-courses-show ul {

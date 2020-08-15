@@ -88,7 +88,21 @@ public class AssignmentsRoutes {
                 },
 
                 (db, entityId, ctx) -> {
-                    db.getAssignments().removeIf(assignment -> assignment.getId().equals(entityId));
+                    Assignment assignment = db.getAssignments()
+                            .stream()
+                            .filter(a -> a.getId().equals(entityId))
+                            .findAny()
+                            .orElseThrow(NotFoundResponse::new);
+                    db.getAssignments().removeIf(a -> a.getId().equals(entityId));
+                    db.getAssignmentResults().removeIf(ar ->
+                            ar.getAssignmentId().equals(entityId));
+                    Chapter chapter = db.getChapters()
+                            .stream()
+                            .filter(c -> c.getId().equals(assignment.getChapterId()))
+                            .findAny()
+                            .orElseThrow(InternalServerErrorResponse::new);
+                    if (chapter.getTestAssignmentId() != null && chapter.getTestAssignmentId().equals(assignment.getId()))
+                        chapter.setTestAssignmentId(null);
                 },
 
                 Database::getAssignments,

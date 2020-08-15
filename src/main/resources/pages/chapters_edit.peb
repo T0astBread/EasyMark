@@ -7,6 +7,16 @@
         name="name"
         value="{{ chapter.getName() }}"
         required/>
+    <input type="checkbox"
+        id="testRequired"
+        name="testRequired"
+        {% if chapter.getTestAssignmentId() is not null %}checked="true"{% endif %}/>
+    <label for="testRequired">
+        <span>Test required</span>
+        {% if chapter.getTestAssignmentId() is not null %}
+            <small>(Unchecking this deletes the test assignment.)</small>
+        {% endif %}
+    </label>
     <input type="hidden"
         name="redirectUrl"
         value="{{ redirectUrl }}"/>

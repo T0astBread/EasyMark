@@ -11,4 +11,5 @@ public class FormKeys {
     public static final String WARNING = "warning";
     public static final String GROUP = "group";
     public static final String LINK = "link";
+    public static final String TEST_REQUIRED = "testRequired";
 }

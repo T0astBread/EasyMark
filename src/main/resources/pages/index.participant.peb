@@ -20,6 +20,33 @@
                 {% endif %}
             </li>
         {% endfor %}
+        {% set testAssignment=testAssignmentPerChapter.get(chapter.getId()) %}
+        {% if testAssignment is not null %}
+            <li>
+                <h3 class="test-assignment">{% include "../partials/assignment-link.peb" with {"assignment": testAssignment} %}</h3>
+                {% set assignmentResult=assignmentResultPerAssignment.get(testAssignment.getId()) %}
+                {% set done=assignmentResult is not null %}
+                {% if done %}
+                    <span><span class="done">Done</span>; Reached <strong>{{ assignmentResult.getScore() }} of {{ testAssignment.getMaxScore() }} points</strong></span>
+                {% else %}
+                    <span><span class="not-done">Not done yet</span>; Max.: <strong>{{ testAssignment.getMaxScore() }} points</strong></span>
+                {% endif %}
+            </li>
+        {% endif %}
         </ul>
+        {# Test is requried and not done #}
+        {% if chapter.getTestAssignmentId() is not null and assignmentResultPerAssignment.get(testAssignment.getId()) is null %}
+            {% if chaptersWithTestRequests contains chapter.getId() %}
+                <p><strong>Test requested</strong></p>
+            {% else %}
+                <form action="/test-requests" method="post">
+                    <button type="submit">Request test</button>
+                    <input type="hidden"
+                        name="chapterId"
+                        value="{{ chapter.getId() }}"/>
+                    {% include "../partials/csrf-input.peb" %}
+                </form>
+            {% endif %}
+        {% endif %}
     {% endfor %}
 {% endblock %}
