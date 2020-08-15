@@ -128,6 +128,8 @@ public class ParticipantsRoutes {
                         .findAny()
                         .orElseThrow(NotFoundResponse::new);
                 db.get().getParticipants().remove(participant);
+                db.get().getAssignmentResults()
+                        .removeIf(ar -> ar.getParticipantId().equals(participantId));
                 DBMS.store();
             }
 
