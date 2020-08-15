@@ -7,6 +7,7 @@ import easymark.webserver.constants.*;
 import io.javalin.*;
 import io.javalin.http.*;
 
+import java.time.*;
 import java.util.*;
 
 import static easymark.webserver.WebServerUtils.checkCSRFToken;
@@ -49,6 +50,7 @@ public class TestRequestRoutes {
                 TestRequest newTestRequest = new TestRequest();
                 newTestRequest.setParticipantId(particpantId);
                 newTestRequest.setChapterId(chapterId);
+                newTestRequest.setTimestamp(LocalDateTime.now());
                 db.get().getTestRequests().add(newTestRequest);
 
                 DBMS.store();

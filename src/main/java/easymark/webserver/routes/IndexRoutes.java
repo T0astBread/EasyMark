@@ -91,6 +91,7 @@ public class IndexRoutes {
                                 }
                             }
                         }
+                        testRequests.sort(Comparator.comparing(TestRequest::getTimestamp).reversed());
 
                         Map<UUID, String> participantNamePerParticipant = new HashMap<>();
                         model.put(ModelKeys.PARTICIPANT_NAME_PER_PARTICIPANT, participantNamePerParticipant);

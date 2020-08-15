@@ -46,7 +46,7 @@
             <strong>{{ participantNamePerParticipant.get(testRequest.getParticipantId()) }}</strong>
             on
             <strong>{{ chapterNamePerChapter.get(testRequest.getChapterId()) }}</strong><br>
-            in {{ courseNamePerChapter.get(testRequest.getChapterId()) }}
+            in {{ courseNamePerChapter.get(testRequest.getChapterId()) }}, {{ testRequest.getTimestamp() | date("yyyy-MM-dd, HH:mm") }}
             <form action="/test-requests/{{ testRequest.getId() }}/delete" method="post">
                 <button type="submit"
                     class="symbol remove-button"
