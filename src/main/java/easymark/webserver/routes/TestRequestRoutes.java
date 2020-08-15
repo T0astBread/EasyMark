@@ -40,6 +40,12 @@ public class TestRequestRoutes {
                 if (!participantExists)
                     throw new NotFoundResponse();
 
+                boolean testRequestExists = db.get().getTestRequests()
+                        .stream()
+                        .anyMatch(tr -> tr.getParticipantId().equals(particpantId) && tr.getChapterId().equals(chapterId));
+                if (testRequestExists)
+                    throw new BadRequestResponse("A test request for this chapter already exists");
+
                 TestRequest newTestRequest = new TestRequest();
                 newTestRequest.setParticipantId(particpantId);
                 newTestRequest.setChapterId(chapterId);
