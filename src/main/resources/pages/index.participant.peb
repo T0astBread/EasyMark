@@ -1,6 +1,25 @@
 {% extends "../partials/page.peb" %}
 
-{% block content %}
-    <h1>Hello participant</h1>
-{% endblock %}
+{% set pageName="index-participant" %}
 
+
+{% block content %}
+    <h1>{{ course.getName() }}</h1>
+    {% for chapter in chapters %}
+        <h2>{{ chapter.getName() }}</h2>
+        <ul>
+        {% for assignment in assignmentsPerChapter.get(chapter.getId()) %}
+            {% set assignmentResult=assignmentResultPerAssignment.get(assignment.getId()) %}
+            {% set done=assignmentResult is not null %}
+            <li>
+                <h3>{{ assignment.getName() }}</h3>
+                {% if done %}
+                    <span><span class="done">Done</span>; Reached <strong>{{ assignmentResult.getScore() }} of {{ assignment.getMaxScore() }} points</strong></span>
+                {% else %}
+                    <span><span class="not-done">Not done yet</span>; Max.: <strong>{{ assignment.getMaxScore() }} points</strong></span>
+                {% endif %}
+            </li>
+        {% endfor %}
+        </ul>
+    {% endfor %}
+{% endblock %}

@@ -170,6 +170,31 @@ form.add {
     border: none;
 }
 
+.done {
+    color: #00d669;
+}
+
+.not-done {
+    color: #d70071;
+}
+
+.done::before,
+.not-done::before {
+    display: inline-block;
+    margin-right: .5em;
+    font-family: 'Noto Color Emoji', serif;
+    font-size: .4em;
+    vertical-align: middle;
+}
+
+.done::before{
+    content: "✔️";
+}
+
+.not-done::before {
+    content: "❌";
+}
+
 #page-courses-show h2,
 #page-courses-show h3,
 #page-courses-show ul {
@@ -352,4 +377,17 @@ form.add {
 
 #page-courses-grading  #save-button:active {
     background: #52d1ff;
+}
+
+#page-index-participant h2 {
+    margin-bottom: .75rem;
+}
+
+#page-index-participant ul {
+    margin-top: 0;
+}
+
+#page-index-participant h3 {
+    margin-top: .5rem;
+    margin-bottom: .25rem;
 }
