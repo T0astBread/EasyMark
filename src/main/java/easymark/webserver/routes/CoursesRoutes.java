@@ -100,7 +100,8 @@ public class CoursesRoutes {
             Map<UUID, String> namePerParticipant;
             Map<UUID, Integer> scorePerParticipant;
             Map<UUID, Integer> maxScorePerParticipant;
-            Map<UUID, Float> ratioPerParticipant;
+            Map<UUID, String> ratioPerParticipant;
+            Map<UUID, String> gradePerParticipant;
             try (DatabaseHandle db = DBMS.openRead()) {
                 course = db.get().getCourses()
                         .stream()
@@ -134,6 +135,7 @@ public class CoursesRoutes {
                 scorePerParticipant = new HashMap<>();
                 maxScorePerParticipant = new HashMap<>();
                 ratioPerParticipant = new HashMap<>();
+                gradePerParticipant = new HashMap<>();
                 participants = db.get().getParticipants()
                         .stream()
 //                        .flatMap(participant -> List.of(participant, participant, participant, participant, participant, participant, participant, participant).stream())
@@ -171,10 +173,22 @@ public class CoursesRoutes {
                                             .orElseThrow()
                                             .getMaxScore())
                                     .sum();
-                            float ratio = Math.round((((float) totalScore) / ((float) maxScore)) * 10000) / 100f;
                             scorePerParticipant.put(participant.getId(), totalScore);
                             maxScorePerParticipant.put(participant.getId(), maxScore);
-                            ratioPerParticipant.put(participant.getId(), ratio);
+
+                            if (maxScore > 0) {
+                                float ratio = ((float) totalScore) / ((float) maxScore);
+                                float ratioPercent = Math.round(ratio * 10000) / 100f;
+                                ratioPerParticipant.put(participant.getId(), Float.toString(ratioPercent));
+
+                                float grade = (ratio * 100 - 106.25f) / -12.5f;
+                                grade = Math.max(.5f, Math.min(5, grade));
+                                grade = Math.round(grade * 100) / 100f;
+                                gradePerParticipant.put(participant.getId(), Float.toString(grade));
+                            } else {
+                                ratioPerParticipant.put(participant.getId(), "-");
+                                gradePerParticipant.put(participant.getId(), "-");
+                            }
                         })
                         .collect(Collectors.toUnmodifiableList());
             }
@@ -196,6 +210,7 @@ public class CoursesRoutes {
             model.put(ModelKeys.SCORE_PER_PARTICIPANT, scorePerParticipant);
             model.put(ModelKeys.MAX_SCORE_PER_PARTICIPANT, maxScorePerParticipant);
             model.put(ModelKeys.RATIO_PER_PARTICIPANT, ratioPerParticipant);
+            model.put(ModelKeys.GRADE_PER_PARTICIPANT, gradePerParticipant);
             ctx.render("pages/courses_grading.peb", model);
         }, roles(UserRole.ADMIN));
 
