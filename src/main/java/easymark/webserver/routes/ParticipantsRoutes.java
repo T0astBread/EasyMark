@@ -9,6 +9,7 @@ import io.javalin.*;
 import io.javalin.http.*;
 
 import java.util.*;
+import java.util.stream.*;
 
 import static easymark.webserver.WebServerUtils.*;
 import static io.javalin.core.security.SecurityUtil.roles;
@@ -170,8 +171,8 @@ public class ParticipantsRoutes {
             Map<String, Object> model = new HashMap<>();
             model.put(ModelKeys.PARTICIPANT, participant);
             model.put(ModelKeys.NAME, name);
-            model.put(ModelKeys.REDIRECT_URL, "/courses/"+participant.getCourseId()+"/grading");
-            model.put(ModelKeys.BACK_URL, "/courses/"+participant.getCourseId()+"/grading");
+            model.put(ModelKeys.REDIRECT_URL, "/courses/" + participant.getCourseId() + "/grading");
+            model.put(ModelKeys.BACK_URL, "/courses/" + participant.getCourseId() + "/grading");
             model.put(ModelKeys.CSRF_TOKEN, makeCSRFToken(ctx));
             ctx.render("pages/participants_edit.peb", model);
         }, roles(UserRole.ADMIN));
@@ -249,6 +250,100 @@ public class ParticipantsRoutes {
             ctx.sessionAttribute(SessionKeys.NAME_DISPLAY, rawName);
             ctx.sessionAttribute(SessionKeys.AT_DISPLAY, rawCat);
             ctx.redirect("/participants/cat-show?redirectUrl=" + redirectUrl);
+        }, roles(UserRole.ADMIN));
+
+
+        app.get("/participants/moodle-import", ctx -> {
+            UUID courseId;
+            try {
+                courseId = UUID.fromString(ctx.queryParam(QueryKeys.COURSE_ID));
+            } catch (Exception e) {
+                throw new BadRequestResponse("Missing query param courseId");
+            }
+
+            Course course;
+            try (DatabaseHandle db = DBMS.openRead()) {
+                course = db.get().getCourses()
+                        .stream()
+                        .filter(c -> c.getId().equals(courseId))
+                        .findAny()
+                        .orElseThrow(() -> new NotFoundResponse("Course not found"));
+            }
+
+            String redirectUrl = ctx.queryParam(QueryKeys.RECIRECT_URL);
+            String cancelUrl = ctx.queryParam(QueryKeys.CANCEL_URL);
+
+            ctx.render("pages/participants_moodle-import.peb", Map.of(
+                    ModelKeys.COURSE, course,
+                    ModelKeys.REDIRECT_URL, redirectUrl == null ? "/" : redirectUrl,
+                    ModelKeys.CANCEL_URL, cancelUrl,
+                    ModelKeys.CSRF_TOKEN, makeCSRFToken(ctx)
+            ));
+        }, roles(UserRole.ADMIN));
+
+
+        app.post("/participants/moodle-import", ctx -> {
+            if (!checkCSRFToken(ctx, ctx.formParam(FormKeys.CSRF_TOKEN)))
+                throw new ForbiddenResponse("Forbidden");
+            System.out.println("eeeh");
+
+            UUID courseId;
+            try {
+                courseId = UUID.fromString(ctx.formParam(FormKeys.COURSE_ID));
+            } catch (Exception e) {
+                throw new BadRequestResponse();
+            }
+            UUID adminId = ctx.sessionAttribute(SessionKeys.ENTITY_ID);
+            String uek = getUekFromContext(ctx);
+
+            String participantsCSV = ctx.formParam(FormKeys.DATA);
+            if (participantsCSV == null)
+                throw new BadRequestResponse();
+
+            Map<String, String> participantNameToCat = new HashMap<>();
+            try (DatabaseHandle db = DBMS.openWrite()) {
+                Optional<Course> course = db.get().getCourses()
+                        .stream()
+                        .filter(c -> c.getId().equals(courseId))
+                        .findAny();
+                if (course.isEmpty())
+                    throw new NotFoundResponse("Course not found");
+                if (!course.get().getAdminId().equals(adminId))
+                    throw new ForbiddenResponse("You are not the admin of this course");
+
+                List<Participant> participants = Arrays.stream(participantsCSV.split("(\r)?\n"))
+                        .skip(1)
+                        .map(line -> line.split("\t"))
+                        .filter(fields -> fields.length >= 3)
+                        .map(fields -> {
+                            String rawName = fields[2] + " " + fields[1];
+                            String nameSalt = Cryptography.generateEncryptionSalt();
+                            String nameEnc = Cryptography.encryptData(rawName, nameSalt, uek);
+
+                            String rawCat = Cryptography.generateAccessToken();
+                            AccessToken cat = Cryptography.accessTokenFromString(rawCat);
+
+                            Participant participant = new Participant();
+                            participant.setCourseId(courseId);
+                            participant.setName(nameEnc);
+                            participant.setNameSalt(nameSalt);
+                            participant.setCat(cat);
+
+                            participantNameToCat.put(rawName, rawCat);
+                            return participant;
+                        })
+                        .collect(Collectors.toList());
+                db.get().getParticipants().addAll(participants);
+                DBMS.store();
+            }
+
+            String redirectUrl = ctx.formParam(FormKeys.REDIRECT_URL);
+
+            ctx.header("Cache-Control", "no-store");
+            ctx.render("pages/participants_moodle-import_show-cats.peb", Map.of(
+                    ModelKeys.PARTICIPANTS, participantNameToCat,
+                    ModelKeys.REDIRECT_URL, redirectUrl
+            ));
         }, roles(UserRole.ADMIN));
     }
 }

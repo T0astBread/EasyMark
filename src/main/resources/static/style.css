@@ -411,6 +411,12 @@ form.add {
     margin-left: .1rem;
 }
 
+#page-courses-grading #bulk-import-link {
+    display: inline-block;
+    margin-left: 1em;
+    font-size: .7em;
+}
+
 #page-courses-grading #save-button {
     padding: .2rem 1.5rem;
     margin: 0 .5rem;

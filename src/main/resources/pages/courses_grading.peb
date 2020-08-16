@@ -122,6 +122,8 @@
     <button type="submit"
         form="create-participant-form"
         >Add</button>
+    <a href="/participants/moodle-import?courseId={{ course.getId() }}&redirectUrl={{ currentUrl }}&cancelUrl={{ currentUrl }}"
+        id="bulk-import-link">Bulk import...</a>
     <span class="spacer"></span>
     <span>{{ assignmentCount }} assignment{{ assignmentCount == 1 ? "" : "s" }}, {{ participants.size() }} participant{{ participants.size() == 1 ? "" : "s" }}</span>
 </div>
