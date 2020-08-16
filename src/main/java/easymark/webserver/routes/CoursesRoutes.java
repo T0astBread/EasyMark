@@ -8,6 +8,7 @@ import easymark.webserver.constants.*;
 import io.javalin.*;
 import io.javalin.http.*;
 
+import java.text.*;
 import java.util.*;
 import java.util.stream.*;
 
@@ -180,6 +181,12 @@ public class CoursesRoutes {
                             ratioPerParticipant.put(participant.getId(), gradingInfo.ratioPercentStr);
                             gradePerParticipant.put(participant.getId(), gradingInfo.gradeStr);
                         })
+                        .sorted(Comparator.comparing(participant -> {
+                            String name = namePerParticipant.getOrDefault(participant.getId(), "");
+                            int lastNameStart = name.lastIndexOf(" ");
+                            String lastName = lastNameStart == -1 ? name : name.substring(lastNameStart);
+                            return lastName;
+                        }, Collator.getInstance()::compare))
                         .collect(Collectors.toUnmodifiableList());
             }
             final int assignmentCount = assignmentsPerChapter.values()
