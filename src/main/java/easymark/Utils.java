@@ -13,6 +13,7 @@ import java.util.*;
 public class Utils {
     public static final SecureRandom RANDOM = new SecureRandom();
     public static final PasswordEncoder PASSWORD_ENCODER;
+    public static final String CSV_DELIMITER = ";";
 
     static {
         final String BCRYPT_PASSWORD_ENCODER = "bcrypt";

@@ -8,7 +8,10 @@ import easymark.webserver.constants.*;
 import io.javalin.*;
 import io.javalin.http.*;
 
+import javax.crypto.*;
+import java.security.*;
 import java.time.*;
+import java.time.format.*;
 import java.util.*;
 import java.util.concurrent.atomic.*;
 import java.util.stream.*;
@@ -231,6 +234,35 @@ public class IndexRoutes {
                     ModelKeys.COURSES_PER_ADMIN, coursesPerAdmin,
                     ModelKeys.CSRF_TOKEN, makeCSRFToken(ctx)
             ));
+        }, roles(UserRole.ADMIN));
+
+
+        app.get("/encrypted-data", ctx -> {
+            UUID adminId = ctx.sessionAttribute(SessionKeys.ENTITY_ID);
+            String uek = getUekFromContext(ctx);
+
+            String backupCSV;
+            try (DatabaseHandle db = DBMS.openRead()) {
+                Set<UUID> ownCourseIDs = db.get().getCourses()
+                        .stream()
+                        .filter(course -> course.getAdminId().equals(adminId))
+                        .map(Entity::getId)
+                        .collect(Collectors.toSet());
+                backupCSV = db.get().getParticipants()
+                        .stream()
+                        .filter(participant -> ownCourseIDs.contains(participant.getCourseId()))
+                        .flatMap(participant -> Stream.of(
+                                participant.getId().toString(),
+                                Utils.CSV_DELIMITER,
+                                Cryptography.decryptData(participant.getName(), participant.getNameSalt(), uek),
+                                "\n"))
+                        .collect(Collectors.joining());
+            }
+
+            String fileName = "easymark_" + LocalDate.now().format(DateTimeFormatter.ISO_DATE) + "_" + adminId + ".csv";
+            ctx.header("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
+            ctx.header("Content-Type", "text/csv");
+            ctx.result(backupCSV);
         }, roles(UserRole.ADMIN));
     }
 }
