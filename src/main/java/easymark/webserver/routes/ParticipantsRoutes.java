@@ -216,5 +216,39 @@ public class ParticipantsRoutes {
             if (redirectUrl != null)
                 ctx.redirect(redirectUrl);
         }, roles(UserRole.ADMIN));
+
+
+        app.post("/participants/:id/reset-cat", ctx -> {
+            if (!checkCSRFToken(ctx, ctx.formParam(FormKeys.CSRF_TOKEN)))
+                throw new ForbiddenResponse("Forbidden");
+
+            UUID participantId;
+            try {
+                participantId = UUID.fromString(ctx.pathParam(PathParams.ID));
+            } catch (Exception e) {
+                throw new BadRequestResponse();
+            }
+
+            String uek = getUekFromContext(ctx);
+
+            Participant participant;
+            String rawCat = Cryptography.generateAccessToken();
+            AccessToken cat = Cryptography.accessTokenFromString(rawCat);
+            try (DatabaseHandle db = DBMS.openWrite()) {
+                participant = db.get().getParticipants()
+                        .stream()
+                        .filter(p -> p.getId().equals(participantId))
+                        .findAny()
+                        .orElseThrow(NotFoundResponse::new);
+                participant.setCat(cat);
+                DBMS.store();
+            }
+            String rawName = Cryptography.decryptData(participant.getName(), participant.getNameSalt(), uek);
+            String redirectUrl = ctx.formParam(FormKeys.REDIRECT_URL);
+
+            ctx.sessionAttribute(SessionKeys.NAME_DISPLAY, rawName);
+            ctx.sessionAttribute(SessionKeys.AT_DISPLAY, rawCat);
+            ctx.redirect("/participants/cat-show?redirectUrl=" + redirectUrl);
+        }, roles(UserRole.ADMIN));
     }
 }
