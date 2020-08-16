@@ -7,6 +7,12 @@
         name="name"
         value="{{ chapter.getName() }}"
         required/>
+    <label for="dueDate">Recommended due date: </label>
+    <input type="date"
+        id="dueDate"
+        name="dueDate"
+        value="{{ chapter.getDueDate() | date("yyyy-MM-dd") }}"
+        required/>
     <input type="checkbox"
         id="testRequired"
         name="testRequired"

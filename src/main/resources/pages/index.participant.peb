@@ -8,6 +8,9 @@
     <p>That's <strong>{{ ratio }}%</strong><br>Grade: <strong>{{ grade }}</strong></p>
     {% for chapter in chapters %}
         <h2>{{ chapter.getName() }}</h2>
+        {% if chapter.getDueDate() is not null %}
+            <small>Recommended due <strong>{{ chapter.getDueDate() | date("dd/MM/yy") }}</strong></small>
+        {% endif %}
         <ul>
         {% for assignment in assignmentsPerChapter.get(chapter.getId()) %}
             {% set assignmentResult=assignmentResultPerAssignment.get(assignment.getId()) %}

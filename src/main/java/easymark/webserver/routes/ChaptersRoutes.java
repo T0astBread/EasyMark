@@ -7,6 +7,7 @@ import easymark.webserver.constants.*;
 import io.javalin.*;
 import io.javalin.http.*;
 
+import java.time.*;
 import java.util.*;
 
 import static easymark.webserver.WebServerUtils.*;
@@ -26,6 +27,12 @@ public class ChaptersRoutes {
                 throw new BadRequestResponse();
             }
 
+            LocalDate dueDate;
+            try {
+                dueDate = LocalDate.parse(ctx.formParam(FormKeys.DUE_DATE));
+            } catch (Exception e) {
+                throw new BadRequestResponse("Invalid due date");
+            }
             boolean testRequired = "on".equalsIgnoreCase(ctx.formParam(FormKeys.TEST_REQUIRED));
 
             try (DatabaseHandle db = DBMS.openWrite()) {
@@ -39,6 +46,7 @@ public class ChaptersRoutes {
                 Chapter newChapter = new Chapter();
                 newChapter.setCourseId(courseId);
                 newChapter.setName(ctx.formParam(FormKeys.NAME));
+                newChapter.setDueDate(dueDate);
                 newChapter.setOrdNum(maxOrdNum + 1);
                 db.get().getChapters().add(newChapter);
 
@@ -181,6 +189,15 @@ public class ChaptersRoutes {
             }
 
             boolean testRequired = "on".equalsIgnoreCase(ctx.formParam(FormKeys.TEST_REQUIRED));
+            String name = ctx.formParam(FormKeys.NAME);
+            if (name == null)
+                throw new BadRequestResponse("Missing name");
+            LocalDate dueDate;
+            try {
+                dueDate = LocalDate.parse(ctx.formParam(FormKeys.DUE_DATE));
+            } catch (Exception e) {
+                throw new BadRequestResponse("Invalid due date");
+            }
 
             try (DatabaseHandle db = DBMS.openWrite()) {
                 Chapter chapter = db.get().getChapters()
@@ -189,7 +206,8 @@ public class ChaptersRoutes {
                         .findAny()
                         .orElseThrow(() -> new NotFoundResponse("Chapter not found"));
 
-                chapter.setName(ctx.formParam(FormKeys.NAME));
+                chapter.setName(name);
+                chapter.setDueDate(dueDate);
 
                 UUID testAssignmentId = chapter.getTestAssignmentId();
                 if (testRequired) {

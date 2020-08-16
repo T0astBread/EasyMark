@@ -18,7 +18,7 @@
     </p>
     {% for chapter in chapters %}
         <div class="ordered-list-row">
-            <h2>{{ chapter.getName() }}</h2>
+            <h2>{{ chapter.getName() }}<small>{{ chapter.getDueDate() is null ? "" : " (~"+(chapter.getDueDate() | date("dd/MM/yy"))+")" }}</small></h2>
             {% include "../partials/ordered-list-buttons.peb" with {
                 "edit": true,
                 "entitySetName": "chapters",
@@ -99,6 +99,12 @@
             placeholder="Chapter name"
             title="Chapter name"
             size="50"
+            required/>
+        <label for="dueDate">Recommended due date: </label>
+        <input type="date"
+            id="dueDate"
+            name="dueDate"
+            value="{{ chapter.getDueDate() }}"
             required/>
         <input type="checkbox"
             name="testRequired"
