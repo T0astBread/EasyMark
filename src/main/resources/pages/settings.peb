@@ -7,6 +7,9 @@
 <form action="/encrypted-data" method="post">
     <textarea name="data"></textarea>
     <button type="submit">Import</button>
+    <input type="hidden"
+        name="redirectUrl"
+        value="/settings"/>
     {% include "../partials/csrf-input.peb" %}
 </form>
 <h2>Admins</h2>

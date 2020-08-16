@@ -264,5 +264,59 @@ public class IndexRoutes {
             ctx.header("Content-Type", "text/csv");
             ctx.result(backupCSV);
         }, roles(UserRole.ADMIN));
+
+
+        app.post("/encrypted-data", ctx -> {
+            if (!checkCSRFToken(ctx, ctx.formParam(FormKeys.CSRF_TOKEN)))
+                throw new ForbiddenResponse();
+
+            UUID adminId = ctx.sessionAttribute(SessionKeys.ENTITY_ID);
+            String uek = getUekFromContext(ctx);
+
+            String backupCSV = ctx.formParam(FormKeys.DATA);
+            if (backupCSV == null)
+                throw new BadRequestResponse();
+            Map<UUID, String> newNamePerParticipant = new HashMap<>();
+            for (String line : backupCSV.split("(\r)?\n")) {
+                if (line.isBlank())
+                    continue;
+                String[] fields = line.split(Utils.CSV_DELIMITER);
+                if (fields.length != 2)
+                    throw new BadRequestResponse("Invalid CSV");
+                try {
+                    UUID participantId = UUID.fromString(fields[0]);
+                    newNamePerParticipant.put(participantId, fields[1]);
+                } catch (IllegalArgumentException e) {
+                    throw new BadRequestResponse("Invalid UUID: " + fields[0]);
+                }
+            }
+
+            try (DatabaseHandle db = DBMS.openWrite()) {
+                Set<UUID> ownCourseIDs = db.get().getCourses()
+                        .stream()
+                        .filter(course -> course.getAdminId().equals(adminId))
+                        .map(Entity::getId)
+                        .collect(Collectors.toSet());
+                db.get().getParticipants()
+                        .stream()
+                        .filter(participant -> ownCourseIDs.contains(participant.getCourseId()))
+                        .forEach(participant -> {
+                            String newName = newNamePerParticipant.get(participant.getId());
+                            if (newName != null) {
+                                String newSalt = Cryptography.generateEncryptionSalt();
+                                String nameEnc = Cryptography.encryptData(newName, newSalt, uek);
+                                participant.setNameSalt(newSalt);
+                                participant.setName(nameEnc);
+                            }
+                        });
+                DBMS.store();
+            } catch (Throwable e) {
+                DBMS.load();  // "Rollback"
+                throw e;
+            }
+
+            String redirectUrl = ctx.formParam(FormKeys.REDIRECT_URL);
+            ctx.redirect(redirectUrl == null ? "/" : redirectUrl);
+        }, roles(UserRole.ADMIN));
     }
 }
