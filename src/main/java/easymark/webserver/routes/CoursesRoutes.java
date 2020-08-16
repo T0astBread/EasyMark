@@ -217,8 +217,10 @@ public class CoursesRoutes {
                 for (Participant participant : db.get().getParticipants()) {
                     String warning = getFormParam(formParams, participant.getId() + "-warning");
                     String group = getFormParam(formParams, participant.getId() + "-group");
+                    String notes = getFormParam(formParams, participant.getId() + "-notes");
                     participant.setWarning(warning);
                     participant.setGroup(group);
+                    participant.setNotes(notes);
 
                     List<Chapter> chapters = db.get().getChapters()
                             .stream()

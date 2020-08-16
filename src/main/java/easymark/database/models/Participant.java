@@ -9,6 +9,7 @@ public class Participant extends Entity {
     private AccessToken cat;
     private String warning;
     private String group;
+    private String notes;
 
     public UUID getCourseId() {
         return courseId;
@@ -56,5 +57,13 @@ public class Participant extends Entity {
 
     public void setGroup(String group) {
         this.group = group;
+    }
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
     }
 }

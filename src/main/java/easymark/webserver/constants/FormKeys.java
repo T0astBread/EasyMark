@@ -10,6 +10,7 @@ public class FormKeys {
     public static final String GROUP_ID = "groupId";
     public static final String WARNING = "warning";
     public static final String GROUP = "group";
+    public static final String NOTES = "notes";
     public static final String LINK = "link";
     public static final String TEST_REQUIRED = "testRequired";
     public static final String OLD_ACCESS_TOKEN = "oldAccessToken";

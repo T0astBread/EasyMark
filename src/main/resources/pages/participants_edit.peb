@@ -15,6 +15,10 @@
     <input id="group"
         name="group"
         value="{{ participant.getGroup() }}"/>
+    <label for="notes">Notes: </label>
+    <input id="notes"
+        name="notes"
+        value="{{ participant.getNotes() }}"/>
     <input type="hidden"
         name="redirectUrl"
         value="{{ redirectUrl }}"/>

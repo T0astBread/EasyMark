@@ -191,6 +191,7 @@ public class ParticipantsRoutes {
             String name = ctx.formParam(FormKeys.NAME);
             String warning = ctx.formParam(FormKeys.WARNING);
             String group = ctx.formParam(FormKeys.GROUP);
+            String notes = ctx.formParam(FormKeys.NOTES);
 
             String uek = getUekFromContext(ctx);
             String nameSalt = Cryptography.generateEncryptionSalt();
@@ -207,6 +208,7 @@ public class ParticipantsRoutes {
                 participant.setNameSalt(nameSalt);
                 participant.setWarning(warning);
                 participant.setGroup(group);
+                participant.setNotes(notes);
                 DBMS.store();
             }
 

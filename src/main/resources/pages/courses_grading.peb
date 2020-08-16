@@ -22,7 +22,7 @@
         <thead>
             <tr>
                 <th rowspan="2" id="participant-header">Participant</th>
-                <th colspan="3">Status</th>
+                <th colspan="4">Status</th>
                 <th colspan="3">Overview</th>
                 {% for chapter in chapters %}
                     {% set assignmentsForChapter=assignmentsPerChapter.get(chapter.getID()) %}
@@ -30,9 +30,10 @@
                 {% endfor %}
             </tr>
             <tr>
-                <th>Warning</th>
                 <th>CAT</th>
+                <th>Warning</th>
                 <th>Group</th>
+                <th>Notes</th>
                 <th>Score</th>
                 <th>Max</th>
                 <th>%</th>
@@ -65,24 +66,31 @@
                         </div>
                     </th>
                     <td>
-                        <input name="{{ participant.getId() }}-warning"
-                            data-position-x="-3"
-                            data-position-y="{{ participantIndex }}"
-                            value="{{ participant.getWarning() }}"/>
-                    </td>
-                    <td>
                         <button type="submit"
                             form="{{ participant.getID() }}-reset-cat-form"
-                            data-position-x="-2"
+                            data-position-x="-4"
                             data-position-y="{{ participantIndex }}"
                             >Reset</button>
                     </td>
                     <td>
+                        <input name="{{ participant.getId() }}-warning"
+                            data-position-x="-3"
+                            data-position-y="{{ participantIndex }}"
+                            value="{{ participant.getWarning() }}"
+                            style="width: 5rem"/>
+                    </td>
+                    <td>
                         <input name="{{ participant.getId() }}-group"
-                            data-position-x="-1"
+                            data-position-x="-2"
                             data-position-y="{{ participantIndex }}"
                             value="{{ participant.getGroup() }}"
                             style="width: 5rem"/>
+                    </td>
+                    <td>
+                        <input name="{{ participant.getId() }}-notes"
+                            data-position-x="-1"
+                            data-position-y="{{ participantIndex }}"
+                            value="{{ participant.getNotes() }}"/>
                     </td>
                     <td>{{ scorePerParticipant.get(participant.getId()) }}</td>
                     <td>{{ maxScorePerParticipant.get(participant.getId()) }}</td>
