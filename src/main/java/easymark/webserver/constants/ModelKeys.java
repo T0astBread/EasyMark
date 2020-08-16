@@ -37,4 +37,8 @@ public class ModelKeys {
     public static final String ADMINS = "admins";
     public static final String ENTITY_ID = "entityId";
     public static final String COURSES_PER_ADMIN = "coursesPerAdmin";
+    public static final String TOTAL_SCORE = "totalScore";
+    public static final String MAX_SCORE = "maxScore";
+    public static final String RATIO = "ratio";
+    public static final String GRADE = "grade";
 }

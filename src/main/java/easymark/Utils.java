@@ -63,4 +63,39 @@ public class Utils {
         }
         return found;
     }
+
+    public static GradingInfo gradingInfo(int totalScore, int maxScore) {
+        if (maxScore > 0) {
+            float ratio = ((float) totalScore) / ((float) maxScore);
+            float ratioPercent = Math.round(ratio * 10000) / 100f;
+
+            float grade = (ratio * 100 - 106.25f) / -12.5f;
+            grade = Math.max(.5f, Math.min(5, grade));
+            grade = Math.round(grade * 100) / 100f;
+
+            return new GradingInfo(totalScore, maxScore, ratio, ratioPercent, grade, Float.toString(ratioPercent), Float.toString(grade));
+        } else {
+            return new GradingInfo(totalScore, maxScore, 0f, 0f, 3f, "-", "-");
+        }
+    }
+
+    public static class GradingInfo {
+        public final int score;
+        public final int maxScore;
+        public final float ratio;
+        public final float ratioPercent;
+        public final float grade;
+        public final String ratioPercentStr;
+        public final String gradeStr;
+
+        public GradingInfo(int score, int maxScore, float ratio, float ratioPercent, float grade, String ratioPercentStr, String gradeStr) {
+            this.score = score;
+            this.maxScore = maxScore;
+            this.ratio = ratio;
+            this.ratioPercent = ratioPercent;
+            this.grade = grade;
+            this.ratioPercentStr = ratioPercentStr;
+            this.gradeStr = gradeStr;
+        }
+    }
 }

@@ -123,6 +123,8 @@ public class IndexRoutes {
                     Map<UUID, AssignmentResult> assignmentResultPerAssignment = new HashMap<>();
                     Map<UUID, Assignment> testAssignmentPerChapter = new HashMap<>();
                     Set<UUID> chaptersWithTestRequests = new HashSet<>();
+                    AtomicInteger totalScore = new AtomicInteger();
+                    AtomicInteger maxScore = new AtomicInteger();
                     try (DatabaseHandle db = DBMS.openRead()) {
                         UUID courseId = db.get().getParticipants()
                                 .stream()
@@ -165,7 +167,11 @@ public class IndexRoutes {
                                                 .stream()
                                                 .filter(ar -> ar.getParticipantId().equals(participantId) && a.getId().equals(ar.getAssignmentId()))
                                                 .findAny()
-                                                .ifPresent(ar -> assignmentResultPerAssignment.put(a.getId(), ar));
+                                                .ifPresent(ar -> {
+                                                    assignmentResultPerAssignment.put(a.getId(), ar);
+                                                    totalScore.addAndGet(ar.getScore());
+                                                    maxScore.addAndGet(a.getMaxScore());
+                                                });
                                     });
 
                                     if (chapter.getTestAssignmentId() != null) {
@@ -180,6 +186,13 @@ public class IndexRoutes {
                                 .sorted(Comparator.comparingInt(Chapter::getOrdNum))
                                 .collect(Collectors.toUnmodifiableList());
                     }
+
+                    Utils.GradingInfo gradingInfo = Utils.gradingInfo(totalScore.get(), maxScore.get());
+                    model.put(ModelKeys.TOTAL_SCORE, gradingInfo.score);
+                    model.put(ModelKeys.MAX_SCORE, gradingInfo.maxScore);
+                    model.put(ModelKeys.RATIO, gradingInfo.ratioPercentStr);
+                    model.put(ModelKeys.GRADE, gradingInfo.gradeStr);
+
                     model.put(ModelKeys.COURSE, course);
                     model.put(ModelKeys.CHAPTERS, chapters);
                     model.put(ModelKeys.ASSIGNMENTS_PER_CHAPTER, assignmentsPerChapter);

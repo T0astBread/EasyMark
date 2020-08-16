@@ -176,19 +176,9 @@ public class CoursesRoutes {
                             scorePerParticipant.put(participant.getId(), totalScore);
                             maxScorePerParticipant.put(participant.getId(), maxScore);
 
-                            if (maxScore > 0) {
-                                float ratio = ((float) totalScore) / ((float) maxScore);
-                                float ratioPercent = Math.round(ratio * 10000) / 100f;
-                                ratioPerParticipant.put(participant.getId(), Float.toString(ratioPercent));
-
-                                float grade = (ratio * 100 - 106.25f) / -12.5f;
-                                grade = Math.max(.5f, Math.min(5, grade));
-                                grade = Math.round(grade * 100) / 100f;
-                                gradePerParticipant.put(participant.getId(), Float.toString(grade));
-                            } else {
-                                ratioPerParticipant.put(participant.getId(), "-");
-                                gradePerParticipant.put(participant.getId(), "-");
-                            }
+                            Utils.GradingInfo gradingInfo = Utils.gradingInfo(totalScore, maxScore);
+                            ratioPerParticipant.put(participant.getId(), gradingInfo.ratioPercentStr);
+                            gradePerParticipant.put(participant.getId(), gradingInfo.gradeStr);
                         })
                         .collect(Collectors.toUnmodifiableList());
             }
