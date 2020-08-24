@@ -34,7 +34,7 @@ public class DBMS {
         }
     }
 
-    public static void replace(Database database) throws IOException {
+    public static void replace(Database database) {
         DBMS.database = database;
     }
 

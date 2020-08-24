@@ -20,4 +20,6 @@ public class CommandLineArgs {
             this.adminSelector = adminSelector;
         }
     }
+
+    public static class DebugSeedDatabase extends CommandLineArgs {}
 }

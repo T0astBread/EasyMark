@@ -13,7 +13,7 @@ public class Main {
         try {
             final CommandLineArgs commandLineArgs = CLI.parse(args);
 
-            try(DatabaseHandle db = DBMS.openWrite()) {
+            try (DatabaseHandle db = DBMS.openWrite()) {
                 DBMS.load();
             } catch (IOException e) {
                 throw new UserFriendlyException("Failed to load database: " + e.getMessage(), ExitStatus.UNEXPECTED_ERROR);
@@ -27,6 +27,8 @@ public class Main {
                 DeleteAdminCommand.run((CommandLineArgs.DeleteAdmin) commandLineArgs);
             else if (commandLineArgs instanceof CommandLineArgs.Serve)
                 ServeCommand.run((CommandLineArgs.Serve) commandLineArgs);
+            else if (commandLineArgs instanceof CommandLineArgs.DebugSeedDatabase)
+                DebugSeedDatabaseCommand.run((CommandLineArgs.DebugSeedDatabase) commandLineArgs);
             else {
                 final String msg = "Subcommand not implemented: " + commandLineArgs.getClass().getSimpleName();
                 throw new UserFriendlyException(msg, ExitStatus.UNEXPECTED_ERROR);

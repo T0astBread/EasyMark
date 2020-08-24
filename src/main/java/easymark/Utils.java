@@ -14,6 +14,8 @@ public class Utils {
     public static final SecureRandom RANDOM = new SecureRandom();
     public static final PasswordEncoder PASSWORD_ENCODER;
     public static final String CSV_DELIMITER = ";";
+    public static final String DEBUG_ADMIN_AT = "977d1f28171b17a71b25f69df08a690224ecf8c637d5e2a8";
+    public static final String DEBUG_PARTICIPANT_AT = "454e7007a3ed86b9639794453546977dcf8e63c8720d169d";
 
     static {
         final String BCRYPT_PASSWORD_ENCODER = "bcrypt";

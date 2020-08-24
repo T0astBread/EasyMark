@@ -27,6 +27,9 @@ public class CLI {
                     throw new UserFriendlyException("delete-admin must be followed by an admin selector", ExitStatus.USER_ERROR);
                 return new CommandLineArgs.DeleteAdmin(parseAdminSelector(args[1]));
 
+            case "debug-seed-database":
+                return new CommandLineArgs.DebugSeedDatabase();
+
             default:
                 throw new UserFriendlyException("Unrecognized subcommand \"" + args[0] + "\" (must be serve/create-admin/reset-admin-token/delete-admin)", ExitStatus.USER_ERROR);
         }
