@@ -1,7 +1,13 @@
 package easymark.cli;
 
 public class CommandLineArgs {
-    public static class Serve extends CommandLineArgs {}
+    public static class Serve extends CommandLineArgs {
+        public final boolean enableInsecureDebugMechanisms;
+
+        public Serve(boolean enableInsecureDebugMechanisms) {
+            this.enableInsecureDebugMechanisms = enableInsecureDebugMechanisms;
+        }
+    }
 
     public static class CreateAdmin extends CommandLineArgs {}
 

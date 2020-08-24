@@ -8,11 +8,12 @@ public class CLI {
 
     public static CommandLineArgs parse(String[] args) throws UserFriendlyException {
         if (args.length == 0)
-            return new CommandLineArgs.Serve();
+            return new CommandLineArgs.Serve(false);
 
         switch (args[0]) {
             case "serve":
-                return new CommandLineArgs.Serve();
+                boolean enableInsecureDebugMechanisms = args.length > 1 && args[1].equals("--enable-insecure-debug-mechanisms");
+                return new CommandLineArgs.Serve(enableInsecureDebugMechanisms);
 
             case "create-admin":
                 return new CommandLineArgs.CreateAdmin();
