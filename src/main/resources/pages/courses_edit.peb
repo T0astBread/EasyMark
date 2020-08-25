@@ -1,7 +1,7 @@
 {% extends "../partials/page.peb" %}
 
 {% block content %}
-<form action="/courses/{{ course.getID() }}/save" method="post">
+<form action="/courses/{{ course.getID() }}" method="post">
     <label for="name">Name: </label>
     <input id="name"
         name="name"

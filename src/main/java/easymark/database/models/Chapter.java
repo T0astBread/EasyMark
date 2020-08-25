@@ -3,7 +3,7 @@ package easymark.database.models;
 import java.time.*;
 import java.util.*;
 
-public class Chapter extends Entity {
+public class Chapter extends Entity implements Ordered {
     private UUID courseId;
     private int ordNum;
     private String name;

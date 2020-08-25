@@ -17,63 +17,160 @@ import static io.javalin.core.security.SecurityUtil.*;
 
 public class CoursesRoutes {
     public static void configure(Javalin app) {
+        new CommonRouteBuilder("courses")
+                .withShow(roles(UserRole.ADMIN), (ctx, courseId) -> {
+                    UUID entityId = ctx.sessionAttribute(SessionKeys.ENTITY_ID);
 
-        app.get("/courses/:id", ctx -> {
-            UUID courseId;
-            try {
-                courseId = UUID.fromString(ctx.pathParam(PathParams.ID));
-            } catch (Exception e) {
-                throw new BadRequestResponse("Bad request");
-            }
+                    Optional<Course> course;
+                    List<Chapter> chapters;
+                    Map<UUID, List<Assignment>> assignmentsPerChapter;
+                    Map<UUID, Assignment> testAssignmentPerChapter;
+                    try (DatabaseHandle db = DBMS.openRead()) {
+                        course = db.get().getCourses()
+                                .stream()
+                                .filter(c -> c.getId().equals(courseId))
+                                .findAny();
 
-            UUID entityId = ctx.sessionAttribute(SessionKeys.ENTITY_ID);
+                        if (course.isEmpty())
+                            throw new NotFoundResponse("Course not found");
+                        if (!course.get().getAdminId().equals(entityId))
+                            throw new ForbiddenResponse("You are not the admin of this course");
 
-            Optional<Course> course;
-            List<Chapter> chapters;
-            Map<UUID, List<Assignment>> assignmentsPerChapter;
-            Map<UUID, Assignment> testAssignmentPerChapter;
-            try (DatabaseHandle db = DBMS.openRead()) {
-                course = db.get().getCourses()
-                        .stream()
-                        .filter(c -> c.getId().equals(courseId))
-                        .findAny();
+                        assignmentsPerChapter = new HashMap<>();
+                        testAssignmentPerChapter = new HashMap<>();
+                        chapters = db.get().getChapters()
+                                .stream()
+                                .filter(chapter -> chapter.getCourseId().equals(courseId))
+                                .peek(chapter -> {
+                                    List<Assignment> assignments = db.get().getAssignments()
+                                            .stream()
+                                            .filter(assignment -> assignment.getChapterId().equals(chapter.getId()))
+                                            .filter(assignment -> {
+                                                boolean isTestAssignment = assignment.getId().equals(chapter.getTestAssignmentId());
+                                                if (isTestAssignment)
+                                                    testAssignmentPerChapter.put(chapter.getId(), assignment);
+                                                return !isTestAssignment;
+                                            })
+                                            .sorted(Comparator.comparingInt(Assignment::getOrdNum))
+                                            .collect(Collectors.toUnmodifiableList());
+                                    assignmentsPerChapter.put(chapter.getId(), assignments);
+                                })
+                                .sorted(Comparator.comparingInt(Chapter::getOrdNum))
+                                .collect(Collectors.toUnmodifiableList());
+                    }
 
-                if (course.isEmpty())
-                    throw new NotFoundResponse("Course not found");
-                if (!course.get().getAdminId().equals(entityId))
-                    throw new ForbiddenResponse("You are not the admin of this course");
+                    ctx.render("pages/courses_show.peb", Map.of(
+                            ModelKeys.CSRF_TOKEN, makeCSRFToken(ctx),
+                            ModelKeys.COURSE, course.get(),
+                            ModelKeys.CHAPTERS, chapters,
+                            ModelKeys.ASSIGNMENTS_PER_CHAPTER, assignmentsPerChapter,
+                            ModelKeys.TEST_ASSIGNMENT_PER_CHAPTER, testAssignmentPerChapter
+                    ));
+                })
 
-                assignmentsPerChapter = new HashMap<>();
-                testAssignmentPerChapter = new HashMap<>();
-                chapters = db.get().getChapters()
-                        .stream()
-                        .filter(chapter -> chapter.getCourseId().equals(courseId))
-                        .peek(chapter -> {
-                            List<Assignment> assignments = db.get().getAssignments()
-                                    .stream()
-                                    .filter(assignment -> assignment.getChapterId().equals(chapter.getId()))
-                                    .filter(assignment -> {
-                                        boolean isTestAssignment = assignment.getId().equals(chapter.getTestAssignmentId());
-                                        if (isTestAssignment)
-                                            testAssignmentPerChapter.put(chapter.getId(), assignment);
-                                        return !isTestAssignment;
-                                    })
-                                    .sorted(Comparator.comparingInt(Assignment::getOrdNum))
-                                    .collect(Collectors.toUnmodifiableList());
-                            assignmentsPerChapter.put(chapter.getId(), assignments);
+                .withCreateOrdered(
+                        roles(UserRole.ADMIN),
+                        Database::getCourses,
+                        Course::getAdminId,
+                        (db, ctx, groupId) -> {
+                            Course newCourse = new Course();
+                            newCourse.setAdminId(groupId);
+                            newCourse.setName(ctx.formParam(FormKeys.NAME));
+                            return newCourse;
                         })
-                        .sorted(Comparator.comparingInt(Chapter::getOrdNum))
-                        .collect(Collectors.toUnmodifiableList());
-            }
 
-            ctx.render("pages/courses_show.peb", Map.of(
-                    ModelKeys.CSRF_TOKEN, makeCSRFToken(ctx),
-                    ModelKeys.COURSE, course.get(),
-                    ModelKeys.CHAPTERS, chapters,
-                    ModelKeys.ASSIGNMENTS_PER_CHAPTER, assignmentsPerChapter,
-                    ModelKeys.TEST_ASSIGNMENT_PER_CHAPTER, testAssignmentPerChapter
-            ));
-        }, roles(UserRole.ADMIN));
+                .withEdit(roles(UserRole.ADMIN), (ctx, courseId) -> {
+                    Course course;
+                    try (DatabaseHandle db = DBMS.openRead()) {
+                        course = db.get().getCourses()
+                                .stream()
+                                .filter(c -> c.getId().equals(courseId))
+                                .findAny()
+                                .orElseThrow(() -> new NotFoundResponse("Course not found"));
+                    }
+
+                    ctx.render("pages/courses_edit.peb", Map.of(
+                            ModelKeys.CSRF_TOKEN, makeCSRFToken(ctx),
+                            ModelKeys.COURSE, course
+                    ));
+                })
+
+                .withUpdate(roles(UserRole.ADMIN), (ctx, courseId) -> {
+                    try (DatabaseHandle db = DBMS.openWrite()) {
+                        Course course = db.get().getCourses()
+                                .stream()
+                                .filter(c -> c.getId().equals(courseId))
+                                .findAny()
+                                .orElseThrow(() -> new NotFoundResponse("Course not found"));
+                        course.setName(ctx.formParam(FormKeys.NAME));
+                        DBMS.store();
+                    }
+
+                    ctx.redirect("/courses/" + courseId);
+                })
+
+                .withUpdateOrder(
+                        roles(UserRole.ADMIN),
+                        Database::getCourses,
+                        Course::getAdminId)
+
+                .withConfirmDelete(roles(UserRole.ADMIN), (ctx, entityId) -> {
+                    String cancelUrl = ctx.queryParam(QueryKeys.CANCEL_URL);
+                    String redirectUrl = ctx.queryParam(QueryKeys.RECIRECT_URL);
+                    String deleteUrl = "/courses/" + entityId + "/delete";
+
+                    if (redirectUrl == null || cancelUrl == null)
+                        throw new BadRequestResponse();
+
+                    String entityName;
+                    try (DatabaseHandle db = DBMS.openRead()) {
+                        entityName = "course \"" + db.get().getCourses()
+                                .stream()
+                                .filter(course -> course.getId().equals(entityId))
+                                .findAny()
+                                .orElseThrow(NotFoundResponse::new)
+                                .getName() + "\" including all associated participants, chapters, test requests, assignments and assignment results";
+                    }
+
+                    ctx.render("pages/confirm-delete.peb", Map.of(
+                            ModelKeys.DELETE_URL, deleteUrl,
+                            ModelKeys.DELETE_ENTITY_NAME, entityName,
+                            ModelKeys.REDIRECT_URL, redirectUrl,
+                            ModelKeys.CANCEL_URL, cancelUrl,
+                            ModelKeys.CSRF_TOKEN, makeCSRFToken(ctx)
+                    ));
+                })
+
+                .withDeleteOrdered(
+                        roles(UserRole.ADMIN),
+                        Database::getCourses,
+                        Course::getAdminId,
+                        (db, courseId, ctx) -> {
+                            Course course = db.getCourses()
+                                    .stream()
+                                    .filter(c -> c.getId().equals(courseId))
+                                    .findAny()
+                                    .orElseThrow(NotFoundResponse::new);
+                            db.getChapters().removeAll(db.getChapters()
+                                    .stream()
+                                    .filter(chapter -> courseId.equals(chapter.getCourseId()))
+                                    .peek(chapter -> {
+                                        db.getTestRequests()
+                                                .removeIf(testRequest -> testRequest.getChapterId().equals(chapter.getId()));
+                                        db.getAssignments().removeAll(db.getAssignments()
+                                                .stream()
+                                                .filter(assignment -> assignment.getChapterId().equals(chapter.getId()))
+                                                .peek(assignment -> db.getAssignmentResults()
+                                                        .removeIf(ar -> ar.getAssignmentId().equals(assignment.getId())))
+                                                .collect(Collectors.toUnmodifiableSet()));
+                                    })
+                                    .collect(Collectors.toUnmodifiableSet()));
+                            db.getParticipants().removeIf(participant -> participant.getCourseId().equals(courseId));
+                            db.getCourses().remove(course);
+                            return course.getAdminId();
+                        })
+
+                .applyTo(app);
 
 
         app.get("/courses/:id/grading", ctx -> {
@@ -281,95 +378,6 @@ public class CoursesRoutes {
 
             ctx.redirect("/courses/" + courseId + "/grading");
         }, roles(UserRole.ADMIN));
-
-
-        app.get("/courses/:id/edit", ctx -> {
-            UUID courseId;
-            try {
-                courseId = UUID.fromString(ctx.pathParam(PathParams.ID));
-            } catch (Exception e) {
-                throw new BadRequestResponse("Bad request");
-            }
-
-            Course course;
-            try (DatabaseHandle db = DBMS.openRead()) {
-                course = db.get().getCourses()
-                        .stream()
-                        .filter(c -> c.getId().equals(courseId))
-                        .findAny()
-                        .orElseThrow(() -> new NotFoundResponse("Course not found"));
-            }
-
-            ctx.render("pages/courses_edit.peb", Map.of(
-                    ModelKeys.CSRF_TOKEN, makeCSRFToken(ctx),
-                    ModelKeys.COURSE, course
-            ));
-        });
-
-        app.post("/courses/:id/save", ctx -> {
-            if (!checkCSRFToken(ctx, ctx.formParam(FormKeys.CSRF_TOKEN)))
-                throw new ForbiddenResponse();
-
-            UUID courseId;
-            try {
-                courseId = UUID.fromString(ctx.pathParam(PathParams.ID));
-            } catch (Exception e) {
-                throw new BadRequestResponse("Bad request");
-            }
-
-            try (DatabaseHandle db = DBMS.openWrite()) {
-                Course course = db.get().getCourses()
-                        .stream()
-                        .filter(c -> c.getId().equals(courseId))
-                        .findAny()
-                        .orElseThrow(() -> new NotFoundResponse("Course not found"));
-                course.setName(ctx.formParam(FormKeys.NAME));
-                DBMS.store();
-            }
-
-            ctx.redirect("/courses/" + courseId);
-        });
-
-        GenericOrdListRoutes.configure(
-                app,
-                "courses",
-
-                (db, ctx, groupId) -> {
-                    Course newCourse = new Course();
-                    newCourse.setAdminId(groupId);
-                    newCourse.setName(ctx.formParam(FormKeys.NAME));
-                    return newCourse;
-                },
-
-                (db, entityId) -> "course \"" + db.getCourses()
-                        .stream()
-                        .filter(course -> course.getId().equals(entityId))
-                        .findAny()
-                        .orElseThrow(NotFoundResponse::new)
-                        .getName() + "\" including all associated participants, chapters, test requests, assignments and assignment results",
-
-                (db, courseId, ctx) -> {
-                    db.getChapters().removeAll(db.getChapters()
-                            .stream()
-                            .filter(chapter -> courseId.equals(chapter.getCourseId()))
-                            .peek(chapter -> {
-                                db.getTestRequests()
-                                        .removeIf(testRequest -> testRequest.getChapterId().equals(chapter.getId()));
-                                db.getAssignments().removeAll(db.getAssignments()
-                                        .stream()
-                                        .filter(assignment -> assignment.getChapterId().equals(chapter.getId()))
-                                        .peek(assignment -> db.getAssignmentResults()
-                                                .removeIf(ar -> ar.getAssignmentId().equals(assignment.getId())))
-                                        .collect(Collectors.toUnmodifiableSet()));
-                            })
-                            .collect(Collectors.toUnmodifiableSet()));
-                    db.getParticipants().removeIf(participant -> participant.getCourseId().equals(courseId));
-                    db.getCourses().removeIf(course -> course.getId().equals(courseId));
-                },
-
-                Database::getCourses,
-                Course::getAdminId
-        );
     }
 
     private static String getFormParam(Map<String, List<String>> formParams, String key) {

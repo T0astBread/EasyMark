@@ -12,46 +12,152 @@ import java.util.*;
 import java.util.stream.*;
 
 import static easymark.webserver.WebServerUtils.*;
-import static io.javalin.core.security.SecurityUtil.roles;
+import static io.javalin.core.security.SecurityUtil.*;
 
 public class ParticipantsRoutes {
     public static void configure(Javalin app) {
+        new CommonRouteBuilder("participants")
+                .withCreate(roles(UserRole.ADMIN), ctx -> {
+                    UUID courseId;
+                    try {
+                        courseId = UUID.fromString(ctx.formParam(FormKeys.COURSE_ID));
+                    } catch (Exception e) {
+                        throw new BadRequestResponse();
+                    }
 
-        app.post("/participants", ctx -> {
-            if (!checkCSRFToken(ctx, ctx.formParam(FormKeys.CSRF_TOKEN)))
-                throw new ForbiddenResponse("Forbidden");
+                    String uek = getUekFromContext(ctx);
 
-            UUID courseId;
-            try {
-                courseId = UUID.fromString(ctx.formParam(FormKeys.COURSE_ID));
-            } catch (Exception e) {
-                throw new BadRequestResponse();
-            }
+                    String rawName = ctx.formParam(FormKeys.NAME);
+                    String nameSalt = Cryptography.generateEncryptionSalt();
+                    String encName = Cryptography.encryptData(rawName, nameSalt, uek);
+                    String rawCat = Cryptography.generateAccessToken();
 
-            String uek = getUekFromContext(ctx);
+                    Participant newParticipant;
+                    try (DatabaseHandle db = DBMS.openWrite()) {
+                        newParticipant = new Participant();
+                        newParticipant.setCourseId(courseId);
+                        newParticipant.setName(encName);
+                        newParticipant.setNameSalt(nameSalt);
+                        newParticipant.setCat(Cryptography.accessTokenFromString(rawCat));
+                        db.get().getParticipants().add(newParticipant);
+                        DBMS.store();
+                    }
 
-            String rawName = ctx.formParam(FormKeys.NAME);
-            String nameSalt = Cryptography.generateEncryptionSalt();
-            String encName = Cryptography.encryptData(rawName, nameSalt, uek);
-            String rawCat = Cryptography.generateAccessToken();
+                    String redirectUrl = ctx.formParam(FormKeys.REDIRECT_URL);
 
-            Participant newParticipant;
-            try (DatabaseHandle db = DBMS.openWrite()) {
-                newParticipant = new Participant();
-                newParticipant.setCourseId(courseId);
-                newParticipant.setName(encName);
-                newParticipant.setNameSalt(nameSalt);
-                newParticipant.setCat(Cryptography.accessTokenFromString(rawCat));
-                db.get().getParticipants().add(newParticipant);
-                DBMS.store();
-            }
+                    ctx.sessionAttribute(SessionKeys.NAME_DISPLAY, rawName);
+                    ctx.sessionAttribute(SessionKeys.AT_DISPLAY, rawCat);
+                    ctx.redirect("/participants/cat-show?redirectUrl=" + redirectUrl);
+                })
 
-            String redirectUrl = ctx.formParam(FormKeys.REDIRECT_URL);
+                .withEdit(roles(UserRole.ADMIN), (ctx, participantId) -> {
+                    String uek = getUekFromContext(ctx);
 
-            ctx.sessionAttribute(SessionKeys.NAME_DISPLAY, rawName);
-            ctx.sessionAttribute(SessionKeys.AT_DISPLAY, rawCat);
-            ctx.redirect("/participants/cat-show?redirectUrl=" + redirectUrl);
-        }, roles(UserRole.ADMIN));
+                    Participant participant;
+                    try (DatabaseHandle db = DBMS.openRead()) {
+                        participant = db.get().getParticipants()
+                                .stream()
+                                .filter(p -> p.getId().equals(participantId))
+                                .findAny()
+                                .orElseThrow(NotFoundResponse::new);
+                    }
+
+                    String name;
+                    try {
+                        name = Cryptography.decryptData(participant.getName(), participant.getNameSalt(), uek);
+                    } catch (Exception e) {
+                        name = "Decryption failure";
+                    }
+                    Map<String, Object> model = new HashMap<>();
+                    model.put(ModelKeys.PARTICIPANT, participant);
+                    model.put(ModelKeys.NAME, name);
+                    model.put(ModelKeys.REDIRECT_URL, "/courses/" + participant.getCourseId() + "/grading");
+                    model.put(ModelKeys.BACK_URL, "/courses/" + participant.getCourseId() + "/grading");
+                    model.put(ModelKeys.CSRF_TOKEN, makeCSRFToken(ctx));
+                    ctx.render("pages/participants_edit.peb", model);
+                })
+
+                .withUpdate(roles(UserRole.ADMIN), (ctx, participantId) -> {
+                    String name = ctx.formParam(FormKeys.NAME);
+                    String warning = ctx.formParam(FormKeys.WARNING);
+                    String group = ctx.formParam(FormKeys.GROUP);
+                    String notes = ctx.formParam(FormKeys.NOTES);
+
+                    String uek = getUekFromContext(ctx);
+                    String nameSalt = Cryptography.generateEncryptionSalt();
+                    String nameEnc = Cryptography.encryptData(name, nameSalt, uek);
+
+                    Participant participant;
+                    try (DatabaseHandle db = DBMS.openWrite()) {
+                        participant = db.get().getParticipants()
+                                .stream()
+                                .filter(p -> p.getId().equals(participantId))
+                                .findAny()
+                                .orElseThrow(NotFoundResponse::new);
+                        participant.setName(nameEnc);
+                        participant.setNameSalt(nameSalt);
+                        participant.setWarning(warning);
+                        participant.setGroup(group);
+                        participant.setNotes(notes);
+                        DBMS.store();
+                    }
+
+                    String redirectUrl = ctx.formParam(FormKeys.REDIRECT_URL);
+                    if (redirectUrl != null)
+                        ctx.redirect(redirectUrl);
+                })
+
+                .withConfirmDelete(roles(UserRole.ADMIN), (ctx, participantId) -> {
+                    Participant participant;
+                    Course course;
+                    try (DatabaseHandle db = DBMS.openRead()) {
+                        participant = db.get().getParticipants()
+                                .stream()
+                                .filter(p -> p.getId().equals(participantId))
+                                .findAny()
+                                .orElseThrow(NotFoundResponse::new);
+                        course = db.get().getCourses()
+                                .stream()
+                                .filter(c -> c.getId().equals(participant.getCourseId()))
+                                .findAny()
+                                .orElseThrow(NotFoundResponse::new);
+                    }
+                    String uek = getUekFromContext(ctx);
+                    String name;
+                    try {
+                        name = Cryptography.decryptData(participant.getName(), participant.getNameSalt(), uek);
+                    } catch (Exception e) {
+                        name = "Decryption failure";
+                    }
+
+                    Map<String, Object> model = new HashMap<>();
+                    model.put(ModelKeys.DELETE_URL, "/participants/" + participantId + "/delete");
+                    model.put(ModelKeys.DELETE_ENTITY_NAME, name + " from course " + course.getName() + " including all associated test requests and assignment results");
+                    model.put(ModelKeys.CANCEL_URL, "/courses/" + course.getId() + "/grading");
+                    model.put(ModelKeys.REDIRECT_URL, "/courses/" + course.getId() + "/grading");
+                    model.put(ModelKeys.CSRF_TOKEN, makeCSRFToken(ctx));
+                    ctx.render("pages/confirm-delete.peb", model);
+                })
+
+                .withDelete(roles(UserRole.ADMIN), (ctx, participantId) -> {
+                    Participant participant;
+                    try (DatabaseHandle db = DBMS.openWrite()) {
+                        participant = db.get().getParticipants()
+                                .stream()
+                                .filter(p -> p.getId().equals(participantId))
+                                .findAny()
+                                .orElseThrow(NotFoundResponse::new);
+                        db.get().getParticipants().remove(participant);
+                        db.get().getAssignmentResults()
+                                .removeIf(ar -> ar.getParticipantId().equals(participantId));
+                        DBMS.store();
+                    }
+
+                    ctx.redirect("/courses/" + participant.getCourseId() + "/grading");
+                })
+
+                .applyTo(app);
+
 
         app.get("/participants/cat-show", ctx -> {
             String redirectUrl = ctx.queryParam(QueryKeys.RECIRECT_URL);
@@ -72,150 +178,6 @@ public class ParticipantsRoutes {
             } catch (Exception e) {
                 throw new BadRequestResponse("Parameters expired");
             }
-        }, roles(UserRole.ADMIN));
-
-
-        app.get("/participants/:id/confirm-delete", ctx -> {
-            UUID participantId;
-            try {
-                participantId = UUID.fromString(ctx.pathParam(PathParams.ID));
-            } catch (Exception e) {
-                throw new BadRequestResponse();
-            }
-
-            Participant participant;
-            Course course;
-            try (DatabaseHandle db = DBMS.openRead()) {
-                participant = db.get().getParticipants()
-                        .stream()
-                        .filter(p -> p.getId().equals(participantId))
-                        .findAny()
-                        .orElseThrow(NotFoundResponse::new);
-                course = db.get().getCourses()
-                        .stream()
-                        .filter(c -> c.getId().equals(participant.getCourseId()))
-                        .findAny()
-                        .orElseThrow(NotFoundResponse::new);
-            }
-            String uek = getUekFromContext(ctx);
-            String name;
-            try {
-                name = Cryptography.decryptData(participant.getName(), participant.getNameSalt(), uek);
-            } catch (Exception e) {
-                name = "Decryption failure";
-            }
-
-            Map<String, Object> model = new HashMap<>();
-            model.put(ModelKeys.DELETE_URL, "/participants/" + participantId + "/delete");
-            model.put(ModelKeys.DELETE_ENTITY_NAME, name + " from course " + course.getName() + " including all associated test requests and assignment results");
-            model.put(ModelKeys.CANCEL_URL, "/courses/" + course.getId() + "/grading");
-            model.put(ModelKeys.REDIRECT_URL, "/courses/" + course.getId() + "/grading");
-            model.put(ModelKeys.CSRF_TOKEN, makeCSRFToken(ctx));
-            ctx.render("pages/confirm-delete.peb", model);
-        }, roles(UserRole.ADMIN));
-
-
-        app.post("/participants/:id/delete", ctx -> {
-            if (!checkCSRFToken(ctx, ctx.formParam(FormKeys.CSRF_TOKEN)))
-                throw new ForbiddenResponse("Forbidden");
-
-            UUID participantId;
-            try {
-                participantId = UUID.fromString(ctx.pathParam(PathParams.ID));
-            } catch (Exception e) {
-                throw new BadRequestResponse();
-            }
-
-            Participant participant;
-            try (DatabaseHandle db = DBMS.openWrite()) {
-                participant = db.get().getParticipants()
-                        .stream()
-                        .filter(p -> p.getId().equals(participantId))
-                        .findAny()
-                        .orElseThrow(NotFoundResponse::new);
-                db.get().getParticipants().remove(participant);
-                db.get().getAssignmentResults()
-                        .removeIf(ar -> ar.getParticipantId().equals(participantId));
-                DBMS.store();
-            }
-
-            ctx.redirect("/courses/" + participant.getCourseId() + "/grading");
-        }, roles(UserRole.ADMIN));
-
-
-        app.get("/participants/:id/edit", ctx -> {
-            UUID participantId;
-            try {
-                participantId = UUID.fromString(ctx.pathParam(PathParams.ID));
-            } catch (Exception e) {
-                throw new BadRequestResponse();
-            }
-
-            String uek = getUekFromContext(ctx);
-
-            Participant participant;
-            try (DatabaseHandle db = DBMS.openRead()) {
-                participant = db.get().getParticipants()
-                        .stream()
-                        .filter(p -> p.getId().equals(participantId))
-                        .findAny()
-                        .orElseThrow(NotFoundResponse::new);
-            }
-
-            String name;
-            try {
-                name = Cryptography.decryptData(participant.getName(), participant.getNameSalt(), uek);
-            } catch (Exception e) {
-                name = "Decryption failure";
-            }
-            Map<String, Object> model = new HashMap<>();
-            model.put(ModelKeys.PARTICIPANT, participant);
-            model.put(ModelKeys.NAME, name);
-            model.put(ModelKeys.REDIRECT_URL, "/courses/" + participant.getCourseId() + "/grading");
-            model.put(ModelKeys.BACK_URL, "/courses/" + participant.getCourseId() + "/grading");
-            model.put(ModelKeys.CSRF_TOKEN, makeCSRFToken(ctx));
-            ctx.render("pages/participants_edit.peb", model);
-        }, roles(UserRole.ADMIN));
-
-
-        app.post("/participants/:id/update", ctx -> {
-            if (!checkCSRFToken(ctx, ctx.formParam(FormKeys.CSRF_TOKEN)))
-                throw new ForbiddenResponse("Forbidden");
-
-            UUID participantId;
-            try {
-                participantId = UUID.fromString(ctx.pathParam(PathParams.ID));
-            } catch (Exception e) {
-                throw new BadRequestResponse();
-            }
-
-            String name = ctx.formParam(FormKeys.NAME);
-            String warning = ctx.formParam(FormKeys.WARNING);
-            String group = ctx.formParam(FormKeys.GROUP);
-            String notes = ctx.formParam(FormKeys.NOTES);
-
-            String uek = getUekFromContext(ctx);
-            String nameSalt = Cryptography.generateEncryptionSalt();
-            String nameEnc = Cryptography.encryptData(name, nameSalt, uek);
-
-            Participant participant;
-            try (DatabaseHandle db = DBMS.openWrite()) {
-                participant = db.get().getParticipants()
-                        .stream()
-                        .filter(p -> p.getId().equals(participantId))
-                        .findAny()
-                        .orElseThrow(NotFoundResponse::new);
-                participant.setName(nameEnc);
-                participant.setNameSalt(nameSalt);
-                participant.setWarning(warning);
-                participant.setGroup(group);
-                participant.setNotes(notes);
-                DBMS.store();
-            }
-
-            String redirectUrl = ctx.formParam(FormKeys.REDIRECT_URL);
-            if (redirectUrl != null)
-                ctx.redirect(redirectUrl);
         }, roles(UserRole.ADMIN));
 
 

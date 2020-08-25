@@ -169,4 +169,22 @@ public class WebServerUtils {
         ctx.removeCookie(CookieKeys.SET);
         ctx.req.changeSessionId();
     }
+
+    public static void checkCSRFFormSubmission(Context ctx) {
+        if (!checkCSRFToken(ctx, ctx.formParam(FormKeys.CSRF_TOKEN)))
+            throw new ForbiddenResponse("Bad CSRF token");
+    }
+
+    public static UUID getValidIDPathParam(Context ctx) {
+        try {
+            return UUID.fromString(ctx.pathParam(PathParams.ID));
+        } catch (Exception e) {
+            throw new BadRequestResponse("Bad request");
+        }
+    }
+
+    public static void redirectFromForm(Context ctx) {
+        String redirectUrl = ctx.formParam(FormKeys.REDIRECT_URL);
+        ctx.redirect(redirectUrl == null ? "/" : redirectUrl);
+    }
 }

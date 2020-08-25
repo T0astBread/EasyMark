@@ -9,7 +9,7 @@
 <a href="/{{ entitySetName }}/{{ entity.getID() }}/confirm-delete?redirectUrl={{ currentUrl }}&cancelUrl={{ currentUrl }}"
     class="symbol">❌</a>
 {% if not loop.first %}
-    <form action="/{{ entitySetName }}/{{ entity.getID() }}?action=move-up" method="post">
+    <form action="/{{ entitySetName }}/{{ entity.getID() }}/update-order?direction=up" method="post">
         <input type="hidden"
             name="redirectUrl"
             value="{{ currentUrl }}"/>
@@ -18,7 +18,7 @@
     </form>
 {% endif %}
 {% if not loop.last %}
-    <form action="/{{ entitySetName }}/{{ entity.getID() }}?action=move-down" method="post">
+    <form action="/{{ entitySetName }}/{{ entity.getID() }}/update-order?direction=down" method="post">
         <input type="hidden"
             name="redirectUrl"
             value="{{ currentUrl }}"/>

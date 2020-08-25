@@ -48,13 +48,8 @@
                     <a href="/assignments/{{ testAssignment.getId() }}/edit?redirectUrl={{ currentUrl }}"
                         class="symbol"
                         style="font-size: .6em">✏️</a>
-                    <form action="/assignments/{{ testAssignment.getId() }}?action=delete" method="post">
-                        <input type="hidden"
-                            name="redirectUrl"
-                            value="{{ currentUrl }}"/>
-                        {% include "../partials/csrf-input.peb" %}
-                        <button type="submit" class="symbol">❌</button>
-                    </form>
+                    <a href="/assignments/{{ testAssignment.getId() }}/confirm-delete?redirectUrl={{ currentUrl }}&cancelUrl={{ currentUrl }}"
+                        class="symbol">❌</a>
                 </div>
             </li>
         {% endif %}

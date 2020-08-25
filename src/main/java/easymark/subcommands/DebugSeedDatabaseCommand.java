@@ -56,7 +56,7 @@ public class DebugSeedDatabaseCommand {
                 if (i < 3) {
                     Assignment testAssignment = new Assignment();
                     testAssignment.setChapterId(chapter.getId());
-                    testAssignment.setOrdNum(nrAssignments);
+                    testAssignment.setOrdNum(-2);
                     testAssignment.setName("Test");
                     testAssignment.setMaxScore(10);
                     db.get().getAssignments().add(testAssignment);

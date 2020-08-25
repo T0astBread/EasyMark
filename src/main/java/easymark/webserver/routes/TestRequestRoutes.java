@@ -15,71 +15,59 @@ import static io.javalin.core.security.SecurityUtil.roles;
 
 public class TestRequestRoutes {
     public static void configure(Javalin app) {
+        new CommonRouteBuilder("test-requests")
+                .withCreate(roles(UserRole.PARTICIPANT), ctx -> {
+                    UUID chapterId;
+                    try {
+                        chapterId = UUID.fromString(ctx.formParam(FormKeys.CHAPTER_ID));
+                    } catch (Exception e) {
+                        throw new BadRequestResponse("Bad request");
+                    }
+                    UUID particpantId = ctx.sessionAttribute(SessionKeys.ENTITY_ID);
 
-        app.post("/test-requests", ctx -> {
-            if (!checkCSRFToken(ctx, ctx.formParam(FormKeys.CSRF_TOKEN)))
-                throw new ForbiddenResponse();
+                    try (DatabaseHandle db = DBMS.openWrite()) {
+                        boolean chapterExists = db.get().getChapters()
+                                .stream()
+                                .anyMatch(c -> c.getId().equals(chapterId));
+                        if (!chapterExists)
+                            throw new NotFoundResponse();
 
-            UUID chapterId;
-            try {
-                chapterId = UUID.fromString(ctx.formParam(FormKeys.CHAPTER_ID));
-            } catch (Exception e) {
-                throw new BadRequestResponse("Bad request");
-            }
-            UUID particpantId = ctx.sessionAttribute(SessionKeys.ENTITY_ID);
+                        boolean participantExists = db.get().getParticipants()
+                                .stream()
+                                .anyMatch(p -> p.getId().equals(particpantId));
+                        if (!participantExists)
+                            throw new NotFoundResponse();
 
-            try (DatabaseHandle db = DBMS.openWrite()) {
-                boolean chapterExists = db.get().getChapters()
-                        .stream()
-                        .anyMatch(c -> c.getId().equals(chapterId));
-                if (!chapterExists)
-                    throw new NotFoundResponse();
+                        boolean testRequestExists = db.get().getTestRequests()
+                                .stream()
+                                .anyMatch(tr -> tr.getParticipantId().equals(particpantId) && tr.getChapterId().equals(chapterId));
+                        if (testRequestExists)
+                            throw new BadRequestResponse("A test request for this chapter already exists");
 
-                boolean participantExists = db.get().getParticipants()
-                        .stream()
-                        .anyMatch(p -> p.getId().equals(particpantId));
-                if (!participantExists)
-                    throw new NotFoundResponse();
+                        TestRequest newTestRequest = new TestRequest();
+                        newTestRequest.setParticipantId(particpantId);
+                        newTestRequest.setChapterId(chapterId);
+                        newTestRequest.setTimestamp(LocalDateTime.now());
+                        db.get().getTestRequests().add(newTestRequest);
 
-                boolean testRequestExists = db.get().getTestRequests()
-                        .stream()
-                        .anyMatch(tr -> tr.getParticipantId().equals(particpantId) && tr.getChapterId().equals(chapterId));
-                if (testRequestExists)
-                    throw new BadRequestResponse("A test request for this chapter already exists");
+                        DBMS.store();
+                    }
 
-                TestRequest newTestRequest = new TestRequest();
-                newTestRequest.setParticipantId(particpantId);
-                newTestRequest.setChapterId(chapterId);
-                newTestRequest.setTimestamp(LocalDateTime.now());
-                db.get().getTestRequests().add(newTestRequest);
+                    ctx.redirect("/");
+                })
 
-                DBMS.store();
-            }
+                .withDelete(roles(UserRole.ADMIN), (ctx, testRequestId) -> {
+                    try (DatabaseHandle db = DBMS.openWrite()) {
+                        boolean didExist = db.get().getTestRequests()
+                                .removeIf(tr -> tr.getId().equals(testRequestId));
+                        if (!didExist)
+                            throw new NotFoundResponse();
+                        DBMS.store();
+                    }
 
-            ctx.redirect("/");
-        }, roles(UserRole.PARTICIPANT));
+                    ctx.redirect("/");
+                })
 
-
-        app.post("/test-requests/:id/delete", ctx -> {
-            if (!checkCSRFToken(ctx, ctx.formParam(FormKeys.CSRF_TOKEN)))
-                throw new ForbiddenResponse();
-
-            UUID testRequestId;
-            try {
-                testRequestId = UUID.fromString(ctx.pathParam(PathParams.ID));
-            } catch (Exception e) {
-                throw new BadRequestResponse("Bad request");
-            }
-
-            try (DatabaseHandle db = DBMS.openWrite()) {
-                boolean didExist = db.get().getTestRequests()
-                        .removeIf(tr -> tr.getId().equals(testRequestId));
-                if (!didExist)
-                    throw new NotFoundResponse();
-                DBMS.store();
-            }
-
-            ctx.redirect("/");
-        }, roles(UserRole.ADMIN));
+                .applyTo(app);
     }
 }

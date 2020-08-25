@@ -8,8 +8,6 @@ import easymark.webserver.constants.*;
 import io.javalin.*;
 import io.javalin.http.*;
 
-import javax.crypto.*;
-import java.security.*;
 import java.time.*;
 import java.time.format.*;
 import java.util.*;
@@ -17,7 +15,7 @@ import java.util.concurrent.atomic.*;
 import java.util.stream.*;
 
 import static easymark.webserver.WebServerUtils.*;
-import static io.javalin.core.security.SecurityUtil.roles;
+import static io.javalin.core.security.SecurityUtil.*;
 
 public class IndexRoutes {
     public static void configure(Javalin app) {
