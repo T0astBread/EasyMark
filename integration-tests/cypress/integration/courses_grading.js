@@ -133,4 +133,34 @@ describe("Grading editor", () => {
 			.removeNondeterminism()
 			.snapshot()
 	})
+
+	it("resets CATs", () => {
+		cy.contains("Demo PARTICIPANT")
+			.closest("tr")
+			.contains("Reset")
+			.click()
+
+		cy.get("#cat")
+			.then(catElem => {
+				const cat = catElem.text()
+				expect(cat).to.match(/[0-9a-f]{48}/)
+
+				cy.contains("Continue")
+					.click()
+				cy.get("main")
+					.removeNondeterminism()
+					.snapshot()
+
+				cy.contains("Log out")
+					.click()
+
+				cy.get("#accessToken")
+					.type(cat)
+					.type("{enter}")
+
+				cy.get("body")
+					.removeNondeterminism()
+					.snapshot()
+			})
+	})
 })
