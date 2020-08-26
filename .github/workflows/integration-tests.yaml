@@ -1,0 +1,47 @@
+name: integration-tests-firefox
+on: push
+jobs:
+  firefox:
+    runs-on: ubuntu-latest
+    # https://github.com/cypress-io/cypress-docker-images
+    container:
+      image: cypress/browsers:node12.14.1-chrome83-ff77
+      # "magical" user id that matches id for created home folder
+      # https://github.com/cypress-io/github-action/issues/104
+      options: --user 1001
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+
+      - run: apt-get update && apt-get install -y openjdk-11-jre
+
+      # for debugging permission problems
+      - run: id
+      # the home folder is set by the GH docker start
+      # -e "HOME=/github/home"
+      # and has permissions (user 1001)
+      # drwxr-xr-x 2 1001  115
+      - run: ls -la ~
+      - run: ls -la .
+
+      - name: Cypress run
+        uses: cypress-io/github-action@v2
+        timeout-minutes: 3
+        with:
+          working-directory: integration-tests
+          browser: firefox
+          start: /__w/EasyMark/EasyMark//gradlew run --args="--enable-insecure-debug-mechanisms"
+
+      # store the screenshots as test artifacts
+      - uses: actions/upload-artifact@v1
+        if: failure()
+        with:
+          name: firefox-screenshots
+          path: integration-tests/cypress/screenshots
+
+      # Test run video was always captured, so this action uses "always()" condition
+      - uses: actions/upload-artifact@v1
+        if: always()
+        with:
+          name: firefox-videos
+          path: integration-tests/cypress/videos
