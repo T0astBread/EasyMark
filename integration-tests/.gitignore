@@ -1,1 +1,5 @@
 node_modules/
+cypress/screenshots/*
+!cypress/screenshots/.gitkeep
+cypress/videos/*
+!cypress/videos/.gitkeep
