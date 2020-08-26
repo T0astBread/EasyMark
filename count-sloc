@@ -1,5 +1,6 @@
 #!/bin/sh
-find src \( \
+find src integration-tests \
+	-path integration-tests/node_modules -prune -false -o \( \
 	-type f \
 	-name "*.java" \
 	-o -name "*.html" \
@@ -7,3 +8,4 @@ find src \( \
 	-o -name "*.js" \
 	-o -name "*.peb" \
 	\) -exec cat {} \; | grep -vE "^\\s*\$" | wc -l
+	#\)

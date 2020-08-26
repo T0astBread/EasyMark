@@ -1,0 +1,13 @@
+#!/bin/bash
+set -euo pipefail
+
+function on_exit {
+	kill $gradle_pid
+}
+trap on_exit EXIT
+
+./gradlew run --args="serve --enable-insecure-debug-mechanisms" &
+gradle_pid=$!
+
+cd integration-tests
+npm start
