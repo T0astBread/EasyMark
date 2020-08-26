@@ -28,13 +28,7 @@ public class WebServer {
 
             if (enableInsecureDebugMechanisms) {
                 String wantedRole = ctx.queryParam(QueryKeys.DEBUG_CHANGE_LOGIN);
-                boolean isLoggedIn = isLoggedIn(ctx);
-                if (wantedRole == null) {
-                    if (!isLoggedIn) {
-                        System.out.println("Logged in as admin");
-                        logIn(ctx, Utils.DEBUG_ADMIN_AT);
-                    }
-                } else {
+                if (wantedRole != null) {
                     boolean wantsAdmin = wantedRole.equalsIgnoreCase(UserRole.ADMIN.toString());
                     Set<UserRole> roles = ctx.sessionAttribute(SessionKeys.ROLES);
                     if (roles == null) {
