@@ -103,8 +103,8 @@
             required/>
         <input type="checkbox"
             name="testRequired"
-            id="{{ chapter.getId() }}-testRequired"/>
-        <label for="{{ chapter.getId() }}-testRequired">Test required</label>
+            id="testRequired"/>
+        <label for="testRequired">Test required</label>
         <input type="hidden"
             name="courseId"
             value="{{ course.getId() }}"/>
