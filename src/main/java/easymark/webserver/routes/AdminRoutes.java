@@ -40,7 +40,7 @@ public class AdminRoutes {
                     boolean isSelf = adminId.equals(ctx.sessionAttribute(SessionKeys.ENTITY_ID));
                     String entityName = (isSelf
                             ? "YOURSELF, which will revoke your server access and delete all of your courses with all associated"
-                            : "admin " + adminId + "with all associated courses,")
+                            : "admin " + adminId + " with all associated courses,")
                             + " participants, chapters, test requests, assignments and assignment results";
 
                     ctx.render("pages/confirm-delete.peb", Map.of(
