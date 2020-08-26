@@ -1,6 +1,8 @@
 package easymark.webserver;
 
 import easymark.*;
+import easymark.cli.*;
+import easymark.subcommands.*;
 import easymark.webserver.constants.*;
 import easymark.webserver.routes.*;
 import io.javalin.*;
@@ -67,6 +69,14 @@ public class WebServer {
         ParticipantsRoutes.configure(app);
         TestRequestRoutes.configure(app);
         AdminRoutes.configure(app);
+
+        if (enableInsecureDebugMechanisms) {
+            app.post("/reset-db", ctx -> {
+                System.out.println("Resetting the database...");
+                DebugSeedDatabaseCommand.run(new CommandLineArgs.DebugSeedDatabase());
+                ctx.result("Reset the database");
+            });
+        }
 
         return app;
     }
