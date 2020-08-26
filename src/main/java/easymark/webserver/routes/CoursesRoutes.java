@@ -220,7 +220,7 @@ public class CoursesRoutes {
                             List<Assignment> assignmentsForParticipant = db.get().getAssignments()
                                     .stream()
                                     .filter(assignment -> assignment.getChapterId().equals(chapter.getId()))
-                                    .sorted(Comparator.comparingInt(Assignment::getOrdNum))
+                                    .sorted(Comparator.comparingInt(assignment -> assignment.getOrdNum() == -2 ? Integer.MAX_VALUE : assignment.getOrdNum()))
                                     .collect(Collectors.toUnmodifiableList());
                             assignments.addAll(assignmentsForParticipant);
                             assignmentsPerChapter.put(chapter.getId(), assignmentsForParticipant);
