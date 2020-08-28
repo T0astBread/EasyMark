@@ -1,10 +1,12 @@
 package easymark.webserver.routes;
 
+import com.sun.source.tree.*;
 import easymark.*;
 import easymark.database.*;
 import easymark.database.models.*;
 import easymark.webserver.*;
 import easymark.webserver.constants.*;
+import easymark.webserver.sessions.*;
 import io.javalin.*;
 import io.javalin.http.*;
 
@@ -15,7 +17,7 @@ import static easymark.webserver.WebServerUtils.*;
 import static io.javalin.core.security.SecurityUtil.*;
 
 public class ParticipantsRoutes {
-    public static void configure(Javalin app) {
+    public static void configure(Javalin app, SessionManager sessionManager) {
         new CommonRouteBuilder("participants")
                 .withCreate(roles(UserRole.ADMIN), ctx -> {
                     UUID courseId;
@@ -25,7 +27,8 @@ public class ParticipantsRoutes {
                         throw new BadRequestResponse();
                     }
 
-                    String uek = getUekFromContext(ctx);
+                    Session session = getSession(sessionManager, ctx);
+                    String uek = getUek(ctx, session);
 
                     String rawName = ctx.formParam(FormKeys.NAME);
                     String nameSalt = Cryptography.generateEncryptionSalt();
@@ -45,13 +48,14 @@ public class ParticipantsRoutes {
 
                     String redirectUrl = ctx.formParam(FormKeys.REDIRECT_URL);
 
-                    ctx.sessionAttribute(SessionKeys.NAME_DISPLAY, rawName);
-                    ctx.sessionAttribute(SessionKeys.AT_DISPLAY, rawCat);
+                    session.setNameDisplay(rawName);
+                    session.setAtDisplay(rawCat);
                     ctx.redirect("/participants/cat-show?redirectUrl=" + redirectUrl);
                 })
 
                 .withEdit(roles(UserRole.ADMIN), (ctx, participantId) -> {
-                    String uek = getUekFromContext(ctx);
+                    Session session = getSession(sessionManager, ctx);
+                    String uek = getUek(ctx, session);
 
                     Participant participant;
                     try (DatabaseHandle db = DBMS.openRead()) {
@@ -78,12 +82,14 @@ public class ParticipantsRoutes {
                 })
 
                 .withUpdate(roles(UserRole.ADMIN), (ctx, participantId) -> {
+                    Session session = getSession(sessionManager, ctx);
+
                     String name = ctx.formParam(FormKeys.NAME);
                     String warning = ctx.formParam(FormKeys.WARNING);
                     String group = ctx.formParam(FormKeys.GROUP);
                     String notes = ctx.formParam(FormKeys.NOTES);
 
-                    String uek = getUekFromContext(ctx);
+                    String uek = getUek(ctx, session);
                     String nameSalt = Cryptography.generateEncryptionSalt();
                     String nameEnc = Cryptography.encryptData(name, nameSalt, uek);
 
@@ -122,7 +128,8 @@ public class ParticipantsRoutes {
                                 .findAny()
                                 .orElseThrow(NotFoundResponse::new);
                     }
-                    String uek = getUekFromContext(ctx);
+                    Session session = getSession(sessionManager, ctx);
+                    String uek = getUek(ctx, session);
                     String name;
                     try {
                         name = Cryptography.decryptData(participant.getName(), participant.getNameSalt(), uek);
@@ -152,7 +159,9 @@ public class ParticipantsRoutes {
                                 .removeIf(ar -> ar.getParticipantId().equals(participantId));
                         DBMS.store();
                     }
-
+                    sessionManager.getAllOfUser(participantId)
+                            .map(Session::getId)
+                            .forEach(sessionManager::revoke);
                     ctx.redirect("/courses/" + participant.getCourseId() + "/grading");
                 })
 
@@ -160,11 +169,12 @@ public class ParticipantsRoutes {
 
 
         app.get("/participants/cat-show", ctx -> {
+            Session session = getSession(sessionManager, ctx);
             String redirectUrl = ctx.queryParam(QueryKeys.RECIRECT_URL);
-            String name = ctx.sessionAttribute(SessionKeys.NAME_DISPLAY);
-            String cat = ctx.sessionAttribute(SessionKeys.AT_DISPLAY);
-            ctx.sessionAttribute(SessionKeys.NAME_DISPLAY, null);
-            ctx.sessionAttribute(SessionKeys.AT_DISPLAY, null);
+            String name = session.getNameDisplay();
+            String cat = session.getAtDisplay();
+            session.setNameDisplay(null);
+            session.setAtDisplay(null);
             if (name == null || cat == null)
                 throw new BadRequestResponse();
 
@@ -182,6 +192,7 @@ public class ParticipantsRoutes {
 
 
         app.post("/participants/:id/reset-cat", ctx -> {
+            Session session = getSession(sessionManager, ctx);
             if (!checkCSRFToken(ctx, ctx.formParam(FormKeys.CSRF_TOKEN)))
                 throw new ForbiddenResponse("Forbidden");
 
@@ -192,7 +203,7 @@ public class ParticipantsRoutes {
                 throw new BadRequestResponse();
             }
 
-            String uek = getUekFromContext(ctx);
+            String uek = getUek(ctx, session);
 
             Participant participant;
             String rawCat = Cryptography.generateAccessToken();
@@ -206,16 +217,22 @@ public class ParticipantsRoutes {
                 participant.setCat(cat);
                 DBMS.store();
             }
+
+            sessionManager.getAllOfUser(participantId)
+                    .map(Session::getId)
+                    .forEach(sessionManager::revoke);
+
             String rawName = Cryptography.decryptData(participant.getName(), participant.getNameSalt(), uek);
             String redirectUrl = ctx.formParam(FormKeys.REDIRECT_URL);
+            session.setNameDisplay(rawName);
+            session.setAtDisplay(rawCat);
 
-            ctx.sessionAttribute(SessionKeys.NAME_DISPLAY, rawName);
-            ctx.sessionAttribute(SessionKeys.AT_DISPLAY, rawCat);
             ctx.redirect("/participants/cat-show?redirectUrl=" + redirectUrl);
         }, roles(UserRole.ADMIN));
 
 
         app.get("/participants/moodle-import", ctx -> {
+            Session session = getSession(sessionManager, ctx);
             UUID courseId;
             try {
                 courseId = UUID.fromString(ctx.queryParam(QueryKeys.COURSE_ID));
@@ -245,9 +262,8 @@ public class ParticipantsRoutes {
 
 
         app.post("/participants/moodle-import", ctx -> {
-            if (!checkCSRFToken(ctx, ctx.formParam(FormKeys.CSRF_TOKEN)))
-                throw new ForbiddenResponse("Forbidden");
-            System.out.println("eeeh");
+            Session session = getSession(sessionManager, ctx);
+            checkCSRFFormSubmission(ctx);
 
             UUID courseId;
             try {
@@ -255,8 +271,8 @@ public class ParticipantsRoutes {
             } catch (Exception e) {
                 throw new BadRequestResponse();
             }
-            UUID adminId = ctx.sessionAttribute(SessionKeys.ENTITY_ID);
-            String uek = getUekFromContext(ctx);
+            UUID adminId = session.getUserId();
+            String uek = getUek(ctx, session);
 
             String participantsCSV = ctx.formParam(FormKeys.DATA);
             if (participantsCSV == null)

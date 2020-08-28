@@ -5,6 +5,7 @@ import easymark.database.*;
 import easymark.database.models.*;
 import easymark.webserver.*;
 import easymark.webserver.constants.*;
+import easymark.webserver.sessions.*;
 import io.javalin.*;
 import io.javalin.http.*;
 
@@ -18,7 +19,7 @@ import static easymark.webserver.WebServerUtils.*;
 import static io.javalin.core.security.SecurityUtil.*;
 
 public class IndexRoutes {
-    public static void configure(Javalin app) {
+    public static void configure(Javalin app, SessionManager sessionManager) {
 
         app.post("/login", ctx -> {
             final ForbiddenResponse FORBIDDEN = new ForbiddenResponse("Forbidden");
@@ -27,15 +28,14 @@ public class IndexRoutes {
                 throw FORBIDDEN;
 
             String providedAccessTokenStr = ctx.formParam("accessToken");
-            logIn(ctx, providedAccessTokenStr);
-            ctx.sessionAttribute(SessionKeys.LAST_SESSION_ACTION, LocalDateTime.now());
+            logIn(sessionManager, ctx, providedAccessTokenStr);
             ctx.redirect("/");
         });
 
         app.post("/logout", ctx -> {
             if (!checkCSRFToken(ctx, ctx.formParam(FormKeys.CSRF_TOKEN)))
                 throw new ForbiddenResponse("Forbidden");
-            logOut(ctx);
+            logOut(sessionManager, ctx);
             ctx.redirect("/");
         });
 
@@ -43,15 +43,17 @@ public class IndexRoutes {
             Map<String, Object> model = new HashMap<>();
             model.put(ModelKeys.CSRF_TOKEN, makeCSRFToken(ctx));
 
-            Set<UserRole> roles = ctx.sessionAttribute(SessionKeys.ROLES);
-            if (roles != null) {
+            UUID sessionId = ctx.sessionAttribute(SessionKeys.SESSION_ID);
+            if (sessionId != null) {
+                Session session = getSession(sessionManager, ctx);
+                Set<UserRole> roles = session.getRoles();
 
                 if (roles.contains(UserRole.ADMIN)) {
-                    UUID adminId = ctx.sessionAttribute(SessionKeys.ENTITY_ID);
+                    UUID adminId = session.getUserId();
                     model.put(ModelKeys.ADMIN_ID, adminId);
                     String uek = null;
                     try {
-                        uek = getUekFromContext(ctx);
+                        uek = getUek(ctx, session);
                     } catch (Exception e) {
                     }
                     final String _uek = uek;
@@ -117,7 +119,7 @@ public class IndexRoutes {
                     return;
 
                 } else if (roles.contains(UserRole.PARTICIPANT)) {
-                    UUID participantId = ctx.sessionAttribute(SessionKeys.ENTITY_ID);
+                    UUID participantId = session.getUserId();
                     Course course;
                     List<Chapter> chapters;
                     Map<UUID, List<Assignment>> assignmentsPerChapter;
@@ -210,12 +212,14 @@ public class IndexRoutes {
 
 
         app.get("/settings", ctx -> {
+            Session session = getSession(sessionManager, ctx);
+
             List<Admin> admins;
             try (DatabaseHandle db = DBMS.openRead()) {
                 admins = db.get().getAdmins();
             }
 
-            UUID entityId = ctx.sessionAttribute(SessionKeys.ENTITY_ID);
+            UUID entityId = session.getUserId();
             if (entityId == null)
                 throw new InternalServerErrorResponse();
 
@@ -236,8 +240,9 @@ public class IndexRoutes {
 
 
         app.get("/encrypted-data", ctx -> {
-            UUID adminId = ctx.sessionAttribute(SessionKeys.ENTITY_ID);
-            String uek = getUekFromContext(ctx);
+            Session session = getSession(sessionManager, ctx);
+            UUID adminId = session.getUserId();
+            String uek = getUek(ctx, session);
 
             String backupCSV;
             try (DatabaseHandle db = DBMS.openRead()) {
@@ -265,11 +270,11 @@ public class IndexRoutes {
 
 
         app.post("/encrypted-data", ctx -> {
-            if (!checkCSRFToken(ctx, ctx.formParam(FormKeys.CSRF_TOKEN)))
-                throw new ForbiddenResponse();
+            checkCSRFFormSubmission(ctx);
 
-            UUID adminId = ctx.sessionAttribute(SessionKeys.ENTITY_ID);
-            String uek = getUekFromContext(ctx);
+            Session session = getSession(sessionManager, ctx);
+            UUID adminId = session.getUserId();
+            String uek = getUek(ctx, session);
 
             String backupCSV = ctx.formParam(FormKeys.DATA);
             if (backupCSV == null)

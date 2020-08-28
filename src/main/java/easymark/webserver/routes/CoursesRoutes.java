@@ -5,6 +5,7 @@ import easymark.database.*;
 import easymark.database.models.*;
 import easymark.webserver.*;
 import easymark.webserver.constants.*;
+import easymark.webserver.sessions.*;
 import io.javalin.*;
 import io.javalin.http.*;
 
@@ -16,10 +17,12 @@ import static easymark.webserver.WebServerUtils.*;
 import static io.javalin.core.security.SecurityUtil.*;
 
 public class CoursesRoutes {
-    public static void configure(Javalin app) {
+    public static void configure(Javalin app, SessionManager sessionManager) {
+
         new CommonRouteBuilder("courses")
                 .withShow(roles(UserRole.ADMIN), (ctx, courseId) -> {
-                    UUID entityId = ctx.sessionAttribute(SessionKeys.ENTITY_ID);
+                    Session session = getSession(sessionManager, ctx);
+                    UUID entityId = session.getUserId();
 
                     Optional<Course> course;
                     List<Chapter> chapters;
@@ -181,10 +184,11 @@ public class CoursesRoutes {
                 throw new BadRequestResponse("Bad request");
             }
 
-            UUID entityId = ctx.sessionAttribute(SessionKeys.ENTITY_ID);
+            Session session = getSession(sessionManager, ctx);
+            UUID entityId = session.getUserId();
             String uek = null;
             try {
-                uek = getUekFromContext(ctx);
+                uek = getUek(ctx, session);
             } catch (Exception e) {
             }
             String _uek = uek;

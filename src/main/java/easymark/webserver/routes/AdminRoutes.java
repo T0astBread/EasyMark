@@ -5,6 +5,7 @@ import easymark.database.*;
 import easymark.database.models.*;
 import easymark.webserver.*;
 import easymark.webserver.constants.*;
+import easymark.webserver.sessions.*;
 import io.javalin.*;
 import io.javalin.http.*;
 
@@ -15,7 +16,7 @@ import static easymark.webserver.WebServerUtils.*;
 import static io.javalin.core.security.SecurityUtil.roles;
 
 public class AdminRoutes {
-    public static void configure(Javalin app) {
+    public static void configure(Javalin app, SessionManager sessionManager) {
 
         new CommonRouteBuilder("admins")
                 .withCreate(roles(UserRole.ADMIN), ctx -> {
@@ -31,13 +32,15 @@ public class AdminRoutes {
 
                     String redirectUrl = ctx.queryParam(QueryKeys.RECIRECT_URL);
 
-                    ctx.sessionAttribute(SessionKeys.ADMIN_ID, newAdmin.getId());
-                    ctx.sessionAttribute(SessionKeys.AT_DISPLAY, adminSecrets.accessTokenStr);
+                    Session session = getSession(sessionManager, ctx);
+                    session.setAdminIdDisplay(newAdmin.getId());
+                    session.setAtDisplay(adminSecrets.accessTokenStr);
                     ctx.redirect("/admins/show-access-token?redirectUrl=" + (redirectUrl == null ? "/" : redirectUrl));
                 })
 
                 .withConfirmDelete(roles(UserRole.ADMIN), (ctx, adminId) -> {
-                    boolean isSelf = adminId.equals(ctx.sessionAttribute(SessionKeys.ENTITY_ID));
+                    Session session = getSession(sessionManager, ctx);
+                    boolean isSelf = adminId.equals(session.getUserId());
                     String entityName = (isSelf
                             ? "YOURSELF, which will revoke your server access and delete all of your courses with all associated"
                             : "admin " + adminId + " with all associated courses,")
@@ -53,7 +56,7 @@ public class AdminRoutes {
                 })
 
                 .withDelete(roles(UserRole.ADMIN), (ctx, adminId) -> {
-                    UUID ownAdminId = ctx.sessionAttribute(SessionKeys.ENTITY_ID);
+                    UUID ownAdminId = getSession(sessionManager, ctx).getUserId();
 
                     try (DatabaseHandle db = DBMS.openWrite()) {
                         boolean didExist = db.get().getAdmins()
@@ -96,9 +99,14 @@ public class AdminRoutes {
 
                     String redirectUrl = ctx.formParam(FormKeys.REDIRECT_URL);
                     if (adminId.equals(ownAdminId)) {
-                        logOut(ctx);
+                        logOut(sessionManager, ctx);
                         redirectUrl = "/";
                     }
+
+                    sessionManager.getAllOfUser(adminId)
+                            .map(Session::getId)
+                            .forEach(sessionManager::revoke);
+
                     ctx.redirect(redirectUrl == null ? "/" : redirectUrl);
                 })
 
@@ -177,8 +185,16 @@ public class AdminRoutes {
                 DBMS.store();
             }
 
-            ctx.sessionAttribute(SessionKeys.ADMIN_ID, adminId);
-            ctx.sessionAttribute(SessionKeys.AT_DISPLAY, newSecrets.accessTokenStr);
+            Session session = getSession(sessionManager, ctx);
+
+            // Revoke all but the current session of the admin
+            sessionManager.getAllOfUser(adminId)
+                    .map(Session::getId)
+                    .filter(sessionId -> !sessionId.equals(session.getId()))
+                    .forEach(sessionManager::revoke);
+
+            session.setAdminIdDisplay(adminId);
+            session.setAtDisplay(newSecrets.accessTokenStr);
 
             String redirectUrl = ctx.queryParam(QueryKeys.RECIRECT_URL);
             ctx.redirect("/admins/show-access-token?redirectUrl=" + (redirectUrl == null ? "/" : redirectUrl));
@@ -186,16 +202,17 @@ public class AdminRoutes {
 
 
         app.get("/admins/show-access-token", ctx -> {
-            String rawAccessToken = ctx.sessionAttribute(SessionKeys.AT_DISPLAY);
-            ctx.sessionAttribute(SessionKeys.AT_DISPLAY, null);
+            Session session = getSession(sessionManager, ctx);
+            String rawAccessToken = session.getAtDisplay();
+            session.setAtDisplay(null);
 
-            UUID adminId = ctx.sessionAttribute(SessionKeys.ADMIN_ID);
-            ctx.sessionAttribute(SessionKeys.ADMIN_ID, null);
-            UUID ownAdminId = ctx.sessionAttribute(SessionKeys.ENTITY_ID);
+            UUID adminId = session.getAdminIdDisplay();
+            session.setAdminIdDisplay(null);
+            UUID ownAdminId = session.getUserId();
 
             String redirectUrl = ctx.queryParam(QueryKeys.RECIRECT_URL);
             if (adminId.equals(ownAdminId)) {
-                logOut(ctx);
+                logOut(sessionManager, ctx);
                 redirectUrl = "/";
             }
 

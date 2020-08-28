@@ -4,35 +4,42 @@ import easymark.*;
 import easymark.database.*;
 import easymark.database.models.*;
 import easymark.webserver.constants.*;
+import easymark.webserver.sessions.*;
 import io.javalin.http.*;
 
-import java.time.*;
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.*;
 
 public class WebServerUtils {
 
-    public static String getUekFromContext(Context ctx) {
+    public static Session getSession(SessionManager sessionManager, Context ctx) {
+        UUID sessionId = ctx.sessionAttribute(SessionKeys.SESSION_ID);
+        try {
+            return sessionManager.get(sessionId);
+        } catch (SessionManager.NotRegisteredException | SessionManager.ExpiredException e) {
+            throw new InternalServerErrorResponse("Lost session");
+        }
+    }
+
+    public static String getUek(Context ctx, Session session) {
         String set = ctx.cookie(CookieKeys.SET);
         if (set == null)
             throw new BadRequestResponse("SET not set");
-        String sek = ctx.sessionAttribute(SessionKeys.SEK);
+        String sek = session.getSek();
         if (sek == null)
             throw new BadRequestResponse("SEK not set");
-        String sekSalt = ctx.sessionAttribute(SessionKeys.SEK_SALT);
+        String sekSalt = session.getSekSalt();
         if (sekSalt == null)
             throw new BadRequestResponse("SEK salt not set");
         return Cryptography.decryptUEK(sek, sekSalt, set);
     }
 
     public static <E extends Entity> E checkAccessTokenMatch(
-            Context ctx,
             List<E> table,
             String providedIdentifier,
             String providedSecret,
-            Function<E, AccessToken> getAccessToken,
-            UserRole roleIfMatch
+            Function<E, AccessToken> getAccessToken
     ) {
         Optional<E> matchingParticipant = table
                 .stream()
@@ -46,7 +53,6 @@ public class WebServerUtils {
                     .apply(matchingParticipant.get())
                     .getSecret();
             if (Utils.PASSWORD_ENCODER.matches(providedSecret, participantSecret)) {
-                ctx.sessionAttribute(SessionKeys.ROLES, Set.of(roleIfMatch));
                 return matchingParticipant.get();
             }
         }
@@ -99,24 +105,7 @@ public class WebServerUtils {
         }
     }
 
-    public static boolean checkForExpiredSession(Context ctx) {
-        LocalDateTime lastSessionAction = ctx.sessionAttribute(SessionKeys.LAST_SESSION_ACTION);
-        if (lastSessionAction == null || LocalDateTime.now().minusHours(5).isAfter(lastSessionAction)) {
-            logOut(ctx);
-            ctx.redirect("/?message=sessionExpired");
-            return true;
-        } else {
-            ctx.sessionAttribute(SessionKeys.LAST_SESSION_ACTION, LocalDateTime.now());
-            return false;
-        }
-    }
-
-    public static boolean isLoggedIn(Context ctx) {
-        Set<UserRole> roles = ctx.sessionAttribute(SessionKeys.ROLES);
-        return roles != null && (roles.contains(UserRole.ADMIN) || roles.contains(UserRole.PARTICIPANT));
-    }
-
-    public static void logIn(Context ctx, String providedAccessTokenStr) {
+    public static void logIn(SessionManager sessionManager, Context ctx, String providedAccessTokenStr) {
         final ForbiddenResponse FORBIDDEN = new ForbiddenResponse("Forbidden");
 
         if (providedAccessTokenStr == null || providedAccessTokenStr.length() != Cryptography.ACCESS_TOKEN_LENGTH)
@@ -125,47 +114,45 @@ public class WebServerUtils {
         String providedSecret = providedAccessTokenStr.substring(Cryptography.ACCESS_TOKEN_IDENTIFIER_LENGTH);
 
         try (DatabaseHandle dbHandle = DBMS.openRead()) {
-            Admin matchingAdmin = checkAccessTokenMatch(
-                    ctx, dbHandle.get().getAdmins(),
-                    providedIdentifier, providedSecret,
-                    Admin::getAccessToken,
-                    UserRole.ADMIN);
-            Entity matchingEntity = matchingAdmin;
+            Session newSession = null;
+            String creationIPAddress = ctx.req.getRemoteAddr();
 
-            if (matchingEntity == null) {
-                matchingEntity = checkAccessTokenMatch(
-                        ctx, dbHandle.get().getParticipants(),
-                        providedIdentifier, providedSecret,
-                        Participant::getCat,
-                        UserRole.PARTICIPANT);
-            } else {
+            Admin matchingAdmin = checkAccessTokenMatch(
+                    dbHandle.get().getAdmins(),
+                    providedIdentifier, providedSecret,
+                    Admin::getAccessToken);
+            if (matchingAdmin != null) {
                 String iek = matchingAdmin.getIek();
                 String iekSalt = matchingAdmin.getIekSalt();
                 String uek = Cryptography.decryptUEK(iek, iekSalt, providedAccessTokenStr);
                 String set = Cryptography.generateSET();
                 String sekSalt = Cryptography.generateEncryptionSalt();
                 String sek = Cryptography.encryptUEK(uek, sekSalt, set);
+                newSession = Session.forAdmin(matchingAdmin, creationIPAddress, sek, sekSalt);
                 ctx.cookie(CookieKeys.SET, set);
-                ctx.sessionAttribute(SessionKeys.SEK, sek);
-                ctx.sessionAttribute(SessionKeys.SEK_SALT, sekSalt);
-                ctx.sessionAttribute(SessionKeys.NAME_DISPLAY, null);
-                ctx.sessionAttribute(SessionKeys.AT_DISPLAY, null);
+            } else {
+                Participant matchingParticipant = checkAccessTokenMatch(
+                        dbHandle.get().getParticipants(),
+                        providedIdentifier, providedSecret,
+                        Participant::getCat);
+                if (matchingParticipant != null) {
+                    newSession = Session.forParticipant(matchingParticipant, creationIPAddress);
+                }
             }
-            if (matchingEntity == null)
+            if (newSession == null)
                 throw FORBIDDEN;
-            ctx.sessionAttribute(SessionKeys.ENTITY_ID, matchingEntity.getId());
+            ctx.sessionAttribute(SessionKeys.SESSION_ID, newSession.getId());
+            sessionManager.register(newSession);
         }
         ctx.req.changeSessionId();
     }
 
-    public static void logOut(Context ctx) {
-        ctx.sessionAttribute(SessionKeys.CSRF_TOKENS, null);
-        ctx.sessionAttribute(SessionKeys.ROLES, null);
-        ctx.sessionAttribute(SessionKeys.ENTITY_ID, null);
-        ctx.sessionAttribute(SessionKeys.SEK, null);
-        ctx.sessionAttribute(SessionKeys.SEK_SALT, null);
-        ctx.sessionAttribute(SessionKeys.NAME_DISPLAY, null);
-        ctx.sessionAttribute(SessionKeys.AT_DISPLAY, null);
+    public static void logOut(SessionManager sessionManager, Context ctx) {
+        UUID sessionId = ctx.sessionAttribute(SessionKeys.SESSION_ID);
+        if (sessionId != null) {
+            sessionManager.revoke(sessionId);
+            ctx.sessionAttribute(SessionKeys.SESSION_ID, null);
+        }
         ctx.removeCookie(CookieKeys.SET);
         ctx.req.changeSessionId();
     }

@@ -4,6 +4,7 @@ import easymark.database.*;
 import easymark.database.models.*;
 import easymark.webserver.*;
 import easymark.webserver.constants.*;
+import easymark.webserver.sessions.*;
 import io.javalin.*;
 import io.javalin.http.*;
 
@@ -11,10 +12,12 @@ import java.time.*;
 import java.util.*;
 
 import static easymark.webserver.WebServerUtils.checkCSRFToken;
+import static easymark.webserver.WebServerUtils.getSession;
 import static io.javalin.core.security.SecurityUtil.roles;
 
 public class TestRequestRoutes {
-    public static void configure(Javalin app) {
+    public static void configure(Javalin app, SessionManager sessionManager) {
+
         new CommonRouteBuilder("test-requests")
                 .withCreate(roles(UserRole.PARTICIPANT), ctx -> {
                     UUID chapterId;
@@ -23,7 +26,8 @@ public class TestRequestRoutes {
                     } catch (Exception e) {
                         throw new BadRequestResponse("Bad request");
                     }
-                    UUID particpantId = ctx.sessionAttribute(SessionKeys.ENTITY_ID);
+                    Session session = getSession(sessionManager, ctx);
+                    UUID particpantId = session.getUserId();
 
                     try (DatabaseHandle db = DBMS.openWrite()) {
                         boolean chapterExists = db.get().getChapters()
