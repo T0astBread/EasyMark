@@ -2,13 +2,14 @@
     <h1>Sessions</h1>
     <ul class="session-list">
     {% for session in sessions %}
-        <li>
+        {% set current=session.getId() equals currentSessionId %}
+        <li class="{{ current ? "current" : "" }}">
             <div>
                 <strong>
                     <span
                         style="background-color: rgb({{ session.getColor().getRed() }},{{ session.getColor().getGreen() }},{{ session.getColor().getBlue() }})"
                         >{{ session.getDisplayId() }}</span>
-                    {% if session.getId() equals currentSessionId %}
+                    {% if current %}
                         <span><- current</span>
                     {% endif %}
                 </strong></div>

@@ -85,4 +85,58 @@ describe("Admin index page", () => {
 			.click()
 		cy.url().should("eq", Cypress.config().baseUrl + "/settings")
 	})
+
+	it("shows the current session", () => {
+		cy.get("#sessions")
+			.contains("<- current")
+	})
+
+	it("revokes non-current sessions", () => {
+		cy.clearCookies()
+		cy.visit("/?debugChangeLogin=admin")
+		cy.get("#sessions li:not(.current)")
+			.first()
+			.as("revokedLI")
+		cy.get("@revokedLI")
+			.find("strong [style]")
+			.then(li => {
+				const sessionIdToRemove = li.text()
+				cy.contains(sessionIdToRemove)
+				cy.get("@revokedLI")
+					.contains("Revoke")
+					.click()
+				cy.get("#sessions li")
+					.each(li => {
+						const thisSessionId = li.find("strong [style]")
+							.text()
+						expect(thisSessionId).to.not.include(sessionIdToRemove)
+					})
+			})
+	})
+
+	it("revokes current sessions", () => {
+		cy.clearCookies()
+		cy.visit("/?debugChangeLogin=admin")
+		cy.get("#sessions li.current")
+			.first()
+			.as("revokedLI")
+		cy.get("@revokedLI")
+			.find("strong [style]")
+			.then(li => {
+				const sessionIdToRemove = li.text()
+				cy.contains(sessionIdToRemove)
+				cy.get("@revokedLI")
+					.contains("Revoke")
+					.click()
+				cy.url().should("eq", Cypress.config().baseUrl + "/")
+				cy.get("#accessToken")
+					.type("977d1f28171b17a71b25f69df08a690224ecf8c637d5e2a8{enter}")
+				cy.get("#sessions li")
+					.each(li => {
+						const thisSessionId = li.find("strong [style]")
+							.text()
+						expect(thisSessionId).to.not.include(sessionIdToRemove)
+					})
+			})
+	})
 })

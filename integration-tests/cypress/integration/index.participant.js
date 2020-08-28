@@ -40,4 +40,58 @@ describe("Participant course view", () => {
 			.removeNondeterminism()
 			.snapshot()
 	})
+
+	it("shows the current session", () => {
+		cy.get("#sessions")
+			.contains("<- current")
+	})
+
+	it("revokes non-current sessions", () => {
+		cy.clearCookies()
+		cy.visit("/?debugChangeLogin=admin")
+		cy.get("#sessions li:not(.current)")
+			.first()
+			.as("revokedLI")
+		cy.get("@revokedLI")
+			.find("strong [style]")
+			.then(li => {
+				const sessionIdToRemove = li.text()
+				cy.contains(sessionIdToRemove)
+				cy.get("@revokedLI")
+					.contains("Revoke")
+					.click()
+				cy.get("#sessions li")
+					.each(li => {
+						const thisSessionId = li.find("strong [style]")
+							.text()
+						expect(thisSessionId).to.not.include(sessionIdToRemove)
+					})
+			})
+	})
+
+	it("revokes current sessions", () => {
+		cy.clearCookies()
+		cy.visit("/?debugChangeLogin=admin")
+		cy.get("#sessions li.current")
+			.first()
+			.as("revokedLI")
+		cy.get("@revokedLI")
+			.find("strong [style]")
+			.then(li => {
+				const sessionIdToRemove = li.text()
+				cy.contains(sessionIdToRemove)
+				cy.get("@revokedLI")
+					.contains("Revoke")
+					.click()
+				cy.url().should("eq", Cypress.config().baseUrl + "/")
+				cy.get("#accessToken")
+					.type("454e7007a3ed86b9639794453546977dcf8e63c8720d169d{enter}")
+				cy.get("#sessions li")
+					.each(li => {
+						const thisSessionId = li.find("strong [style]")
+							.text()
+						expect(thisSessionId).to.not.include(sessionIdToRemove)
+					})
+			})
+	})
 })
