@@ -7,6 +7,7 @@ import easymark.webserver.constants.*;
 import easymark.webserver.sessions.*;
 import io.javalin.http.*;
 
+import java.time.*;
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.*;
@@ -59,50 +60,27 @@ public class WebServerUtils {
         return null;
     }
 
+    public static void revokeCSRFToken(Context ctx) {
+        CSRFToken token = ctx.sessionAttribute(SessionKeys.CSRF_TOKEN);
+        if (token != null)
+            token.revoke();
+    }
+
     public static CSRFToken makeCSRFToken(Context ctx) {
+        revokeCSRFToken(ctx);
         CSRFToken newToken = CSRFToken.random();
-
-        List<CSRFToken> sessionCsrfTokens = ctx.sessionAttribute(SessionKeys.CSRF_TOKENS);
-        if (sessionCsrfTokens == null) {
-            sessionCsrfTokens = new ArrayList<>();
-        } else {
-            filterInvalidCSRFTokens(ctx);
-        }
-        sessionCsrfTokens.add(newToken);
-        ctx.sessionAttribute(SessionKeys.CSRF_TOKENS, sessionCsrfTokens);
+        ctx.sessionAttribute(SessionKeys.CSRF_TOKEN, newToken);
         ctx.header("Cache-Control", "no-store");  // Needed so that back button doesn't break
-
         return newToken;
     }
 
     public static boolean checkCSRFToken(Context ctx, String providedToken) {
         if (providedToken == null)
             return false;
-
-        List<CSRFToken> sessionCsrfTokens = ctx.sessionAttribute(SessionKeys.CSRF_TOKENS);
-        if (sessionCsrfTokens == null)
-            return false;
-        filterInvalidCSRFTokens(ctx);
-
-        Optional<CSRFToken> match = sessionCsrfTokens
-                .stream()
-                .filter(csrfToken -> csrfToken.getValue().equals(providedToken))
-                .findAny();
-
-        match.ifPresent(sessionCsrfTokens::remove);
-        ctx.sessionAttribute(SessionKeys.CSRF_TOKENS, sessionCsrfTokens);
-        return match.isPresent();
-    }
-
-    public static void filterInvalidCSRFTokens(Context ctx) {
-        List<CSRFToken> sessionCsrfTokens = ctx.sessionAttribute(SessionKeys.CSRF_TOKENS);
-        if (sessionCsrfTokens != null) {
-            sessionCsrfTokens = sessionCsrfTokens
-                    .stream()
-                    .filter(CSRFToken::isValid)
-                    .collect(Collectors.toList());
-            ctx.sessionAttribute(SessionKeys.CSRF_TOKENS, sessionCsrfTokens);
-        }
+        CSRFToken currentToken = ctx.sessionAttribute(SessionKeys.CSRF_TOKEN);
+        return currentToken != null
+                && currentToken.getValue().equals(providedToken)
+                && currentToken.isValid();
     }
 
     public static void logIn(SessionManager sessionManager, Context ctx, String providedAccessTokenStr) {
@@ -153,6 +131,7 @@ public class WebServerUtils {
             sessionManager.revoke(sessionId);
             ctx.sessionAttribute(SessionKeys.SESSION_ID, null);
         }
+        revokeCSRFToken(ctx);
         ctx.removeCookie(CookieKeys.SET);
         ctx.req.changeSessionId();
     }

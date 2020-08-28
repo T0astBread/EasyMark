@@ -7,6 +7,7 @@ import java.time.*;
 public class CSRFToken {
     private final String value;
     private final LocalDateTime timeout;
+    private boolean isRevoked = false;
 
     private CSRFToken(String value, LocalDateTime timeout) {
         this.value = value;
@@ -24,6 +25,10 @@ public class CSRFToken {
     }
 
     public boolean isValid() {
-        return !LocalDateTime.now().isAfter(this.timeout);
+        return !isRevoked && !LocalDateTime.now().isAfter(this.timeout);
+    }
+
+    public void revoke() {
+        this.isRevoked = true;
     }
 }
