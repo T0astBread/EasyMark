@@ -14,5 +14,7 @@ Cypress.Commands.add("removeNondeterminism", {
 }, subject => {
 	subject.find("input[name=csrfToken]")
 		.attr("value", "")
+	subject.find(".session-list")
+		.html("")
 	return subject
 })

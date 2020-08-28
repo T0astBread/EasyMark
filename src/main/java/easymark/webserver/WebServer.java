@@ -77,6 +77,7 @@ public class WebServer {
         ParticipantsRoutes.configure(app, sessionManager);
         TestRequestRoutes.configure(app, sessionManager);
         AdminRoutes.configure(app, sessionManager);
+        SessionRoutes.configure(app, sessionManager);
 
         if (enableInsecureDebugMechanisms) {
             app.post("/reset-db", ctx -> {

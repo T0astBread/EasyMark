@@ -170,6 +170,19 @@ form.add {
     border: none;
 }
 
+.session-list {
+	list-style: none;
+	padding: 0;
+}
+
+.session-list li > * {
+	margin: .25rem 0;
+}
+
+.session-list li > :not(:first-child) {
+	margin-left: 1rem;
+}
+
 .done {
     color: #00d669;
 }
@@ -206,8 +219,10 @@ form.add {
 }
 
 #page-index-admin main {
-    display: flex;
-    flex-direction: row;
+    display: grid;
+    grid-template-rows: 3fr 2fr;
+    grid-template-columns: auto 2fr;
+    gap: .5rem;
     background: none;
 }
 
@@ -217,8 +232,8 @@ form.add {
     background: white;
 }
 
-#page-index-admin main > :not(:last-child) {
-    margin-right: .5rem;
+#page-index-admin #courses {
+	grid-area: span 2;
 }
 
 #page-index-admin #test-requests {
@@ -434,15 +449,49 @@ form.add {
     background: #52d1ff;
 }
 
-#page-index-participant h2 {
+#page-index-participant {
+	padding: 0;
+}
+
+#page-index-participant header {
+    margin: 0 .5rem;
+}
+
+#page-index-participant main {
+	position: relative;
+    padding: .5rem;
+    padding-top: 0;
+	display: flex;
+	flex-direction: row;
+	align-items: flex-start;
+    overflow: auto;
+	background: none;
+}
+
+#page-index-participant main > * {
+    padding: 0 1rem;
+    margin: 0;
+    background: white;
+}
+
+#page-index-participant #course {
+	flex-grow: 1;
+	margin-right: .5rem;
+}
+
+#page-index-participant #course h2 {
     margin-bottom: .75rem;
 }
 
-#page-index-participant ul {
+#page-index-participant #course ul {
     margin-top: 0;
 }
 
-#page-index-participant h3 {
+#page-index-participant #course h3 {
     margin-top: .5rem;
     margin-bottom: .25rem;
+}
+#page-index-participant #sessions {
+	position: sticky;
+	top: 0;
 }

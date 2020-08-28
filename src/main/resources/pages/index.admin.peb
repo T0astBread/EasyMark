@@ -61,4 +61,5 @@
     {% endfor %}
     </ul>
 </div>
+{% include "../partials/session-list.peb" %}
 {% endblock %}

@@ -46,6 +46,10 @@ public class IndexRoutes {
             UUID sessionId = ctx.sessionAttribute(SessionKeys.SESSION_ID);
             if (sessionId != null) {
                 Session session = getSession(sessionManager, ctx);
+                model.put(ModelKeys.SESSIONS,
+                        sessionManager.getAllOfUser(session.getUserId())
+                                .collect(Collectors.toUnmodifiableList()));
+                model.put(SessionKeys.CURRENT_SESSION_ID, session.getId());
                 Set<UserRole> roles = session.getRoles();
 
                 if (roles.contains(UserRole.ADMIN)) {
@@ -202,7 +206,6 @@ public class IndexRoutes {
                     model.put(ModelKeys.ASSIGNMENT_RESULT_PER_ASSIGNMENT, assignmentResultPerAssignment);
                     model.put(ModelKeys.TEST_ASSIGNMENT_PER_CHAPTER, testAssignmentPerChapter);
                     model.put(ModelKeys.CHAPTERS_WITH_TEST_REQUESTS, chaptersWithTestRequests);
-                    model.put(ModelKeys.CSRF_TOKEN, makeCSRFToken(ctx));
                     ctx.render("pages/index.participant.peb", model);
                     return;
                 }

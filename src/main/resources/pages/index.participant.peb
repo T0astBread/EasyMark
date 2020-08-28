@@ -4,6 +4,7 @@
 {% block titleOnPage %}{{ course.getName() }}{% endblock %}
 
 {% block content %}
+<div id="course">
     <p>Reached <strong>{{ totalScore }} out of {{ maxScore }}</strong> points in completed assignments so far</p>
     <p>That's <strong>{{ ratio }}%</strong><br>Grade: <strong>{{ grade }}</strong></p>
     {% for chapter in chapters %}
@@ -53,4 +54,6 @@
             {% endif %}
         {% endif %}
     {% endfor %}
+</div>
+{% include "../partials/session-list.peb" %}
 {% endblock %}

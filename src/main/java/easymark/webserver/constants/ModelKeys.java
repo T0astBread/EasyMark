@@ -41,4 +41,5 @@ public class ModelKeys {
     public static final String MAX_SCORE = "maxScore";
     public static final String RATIO = "ratio";
     public static final String GRADE = "grade";
+    public static final String SESSIONS = "sessions";
 }

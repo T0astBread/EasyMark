@@ -106,6 +106,10 @@ public class Session {
         this.adminIdDisplay = adminIdDisplay;
     }
 
+    public String getDisplayId() {
+        return this.id.toString().substring(0, 8);
+    }
+
     private static int randomColorVal() {
         return (int) (Math.random() * 255);
     }
