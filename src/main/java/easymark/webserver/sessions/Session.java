@@ -4,6 +4,7 @@ import easymark.database.models.*;
 import easymark.webserver.*;
 
 import java.awt.*;
+import java.awt.color.*;
 import java.time.*;
 import java.util.*;
 import java.util.List;
@@ -32,7 +33,7 @@ public class Session {
 
     private Session(UUID userId, String creationIPAddress, Set<UserRole> roles, String sek, String sekSalt) {
         this.id = UUID.randomUUID();
-        this.color = new Color(randomColorVal(), randomColorVal(), randomColorVal());
+        this.color = Color.getHSBColor((float) Math.random(), (float) Math.random(), 1);
         this.userId = userId;
         this.creationIPAddress = creationIPAddress;
         this.roles = roles;
