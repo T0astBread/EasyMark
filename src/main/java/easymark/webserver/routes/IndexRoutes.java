@@ -8,10 +8,12 @@ import easymark.webserver.constants.*;
 import easymark.webserver.sessions.*;
 import io.javalin.*;
 import io.javalin.http.*;
+import io.javalin.http.util.*;
 
 import java.time.*;
 import java.time.format.*;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.stream.*;
 
@@ -19,13 +21,12 @@ import static easymark.webserver.WebServerUtils.*;
 import static io.javalin.core.security.SecurityUtil.*;
 
 public class IndexRoutes {
-    public static void configure(Javalin app, SessionManager sessionManager) {
+    public static void configure(Javalin app, SessionManager sessionManager, boolean enableInsecureDebugMechanisms) {
 
         app.post("/login", ctx -> {
-            final ForbiddenResponse FORBIDDEN = new ForbiddenResponse("Forbidden");
-
-            if (!checkCSRFToken(ctx, ctx.formParam(FormKeys.CSRF_TOKEN)))
-                throw FORBIDDEN;
+            if (!enableInsecureDebugMechanisms)
+                new RateLimit(ctx).requestPerTimeUnit(6, TimeUnit.MINUTES);
+            checkCSRFFormSubmission(ctx);
 
             String providedAccessTokenStr = ctx.formParam("accessToken");
             logIn(sessionManager, ctx, providedAccessTokenStr);

@@ -75,7 +75,7 @@ public class WebServer {
 
         app.config.addStaticFiles("static");
 
-        IndexRoutes.configure(app, sessionManager);
+        IndexRoutes.configure(app, sessionManager, enableInsecureDebugMechanisms);
         CoursesRoutes.configure(app, sessionManager);
         ChaptersRoutes.configure(app, sessionManager);
         AssignmentsRoutes.configure(app, sessionManager);
