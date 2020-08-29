@@ -242,7 +242,7 @@ describe("Settings page", () => {
 						},
 					}).then(res => {
 						expect(res.status).to.eq(403)
-						expect(res.body).to.eq("Forbidden")
+						expect(res.body).to.include("Forbidden")
 					})
 				})
 			})

@@ -101,7 +101,7 @@ describe("Grading editor", () => {
 				},
 			}).then(res => {
 				expect(res.status).to.eq(403)
-				expect(res.body).to.eq("Forbidden")
+				expect(res.body).to.include("Forbidden")
 			})
 		})
 		cy.visit("/?debugChangeLogin=admin")

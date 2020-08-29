@@ -1,0 +1,21 @@
+{% extends "../partials/page.peb" %}
+
+{% block header %}
+{% endblock %}
+
+{% block content %}
+<div class="center">
+    <h1>{{ statusCode }}</h1>
+    <p>{{ statusMessage }}</p>
+</div>
+
+<style>
+.center {
+    width: 100%;
+    max-width: 1000px;
+    margin: auto;
+    font-size: 1.6em;
+}
+</style>
+{% endblock %}
+

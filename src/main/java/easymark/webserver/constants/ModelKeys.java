@@ -43,4 +43,6 @@ public class ModelKeys {
     public static final String GRADE = "grade";
     public static final String SESSIONS = "sessions";
     public static final String ACTIVITY_LOG_ITEMS = "activityLogItems";
+    public static final String STATUS_CODE = "statusCode";
+    public static final String STATUS_MESSAGE = "statusMessage";
 }

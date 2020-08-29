@@ -73,6 +73,17 @@ public class WebServer {
             handler.handle(ctx);
         });
 
+        app.after("*", ctx -> {
+            if (ctx.status() / 100 != 2) {
+                String message = ctx.resultString();
+                if (message == null) message = "";
+                ctx.render("pages/error.peb", Map.of(
+                        ModelKeys.STATUS_CODE, ctx.status(),
+                        ModelKeys.STATUS_MESSAGE, message
+                ));
+            }
+        });
+
         app.config.addStaticFiles("static");
 
         IndexRoutes.configure(app, sessionManager, enableInsecureDebugMechanisms);
