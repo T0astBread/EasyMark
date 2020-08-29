@@ -3,6 +3,7 @@ package easymark.webserver.routes;
 import easymark.*;
 import easymark.database.*;
 import easymark.database.models.*;
+import easymark.pebble.*;
 import easymark.webserver.*;
 import easymark.webserver.constants.*;
 import easymark.webserver.sessions.*;
@@ -10,9 +11,11 @@ import io.javalin.*;
 import io.javalin.http.*;
 import io.javalin.http.util.*;
 
+import java.awt.*;
 import java.time.*;
 import java.time.format.*;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 import java.util.stream.*;
@@ -30,6 +33,20 @@ public class IndexRoutes {
 
             String providedAccessTokenStr = ctx.formParam("accessToken");
             logIn(sessionManager, ctx, providedAccessTokenStr);
+
+            Session session = getSession(sessionManager, ctx);
+            if (session.getRoles().contains(UserRole.ADMIN)) {
+                try (DatabaseHandle db = DBMS.openWrite()) {
+                    Color c = session.getColor();
+                    logActivity(db.get(), session, "Logged in; IP Address: [b]"
+                            + ctx.req.getRemoteAddr()
+                            + "[/b], Session: [session("
+                            + c.getRed() + "," + c.getGreen() + "," + c.getBlue()
+                            + ")]" + ShortUUIDFilter.apply(session.getId())
+                            + "[/session]");
+                    DBMS.store();
+                }
+            }
             ctx.redirect("/");
         });
 
