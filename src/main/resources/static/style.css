@@ -462,22 +462,13 @@ form.add {
 	position: relative;
     padding: .5rem;
     padding-top: 0;
-	display: flex;
-	flex-direction: row;
-	align-items: flex-start;
-    overflow: auto;
 	background: none;
 }
 
 #page-index-participant main > * {
-    padding: 0 1rem;
+    padding: .25rem 1rem;
     margin: 0;
     background: white;
-}
-
-#page-index-participant #course {
-	flex-grow: 1;
-	margin-right: .5rem;
 }
 
 #page-index-participant #course h2 {
@@ -492,7 +483,37 @@ form.add {
     margin-top: .5rem;
     margin-bottom: .25rem;
 }
+
 #page-index-participant #sessions {
-	position: sticky;
-	top: 0;
+	margin-bottom: .5rem;
+}
+
+@media (max-width: 800px) {
+	#page-index-participant header {
+		position: relative;
+	}
+}
+
+@media (min-width: 800px) {
+	#page-index-participant main {
+		display: flex;
+		flex-direction: row-reverse;
+		align-items: flex-start;
+		overflow: auto;
+	}
+
+	#page-index-participant main > * {
+		padding: 0 1rem;
+	}
+
+	#page-index-participant #course {
+		flex-grow: 1;
+		margin-right: .5rem;
+		margin-bottom: 0;
+	}
+
+	#page-index-participant #sessions {
+		position: sticky;
+		top: 0;
+	}
 }
