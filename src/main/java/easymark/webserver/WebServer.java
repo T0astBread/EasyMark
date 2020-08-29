@@ -84,6 +84,7 @@ public class WebServer {
             }
         });
 
+        app.config.enableCorsForAllOrigins();
         app.config.addStaticFiles("static");
 
         IndexRoutes.configure(app, sessionManager, enableInsecureDebugMechanisms);
