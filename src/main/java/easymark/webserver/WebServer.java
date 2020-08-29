@@ -1,15 +1,17 @@
 package easymark.webserver;
 
+import com.mitchellbosecke.pebble.*;
 import easymark.*;
 import easymark.cli.*;
+import easymark.pebble.*;
 import easymark.subcommands.*;
 import easymark.webserver.constants.*;
 import easymark.webserver.routes.*;
 import easymark.webserver.sessions.*;
 import io.javalin.*;
 import io.javalin.http.*;
+import io.javalin.plugin.rendering.template.*;
 
-import java.time.*;
 import java.util.*;
 
 import static easymark.webserver.WebServerUtils.*;
@@ -18,6 +20,9 @@ public class WebServer {
     public static final int PORT = 8080;
 
     public static Javalin create(boolean enableInsecureDebugMechanisms) {
+        JavalinPebble.configure(new PebbleEngine.Builder()
+                .extension(new EasyMarkPebbleExtension())
+                .build());
         Javalin app = Javalin.create();
         SessionManager sessionManager = new SessionManager();
 
@@ -72,8 +77,8 @@ public class WebServer {
 
         IndexRoutes.configure(app, sessionManager);
         CoursesRoutes.configure(app, sessionManager);
-        ChaptersRoutes.configure(app);
-        AssignmentsRoutes.configure(app);
+        ChaptersRoutes.configure(app, sessionManager);
+        AssignmentsRoutes.configure(app, sessionManager);
         ParticipantsRoutes.configure(app, sessionManager);
         TestRequestRoutes.configure(app, sessionManager);
         AdminRoutes.configure(app, sessionManager);

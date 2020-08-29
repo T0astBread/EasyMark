@@ -118,6 +118,13 @@ public class IndexRoutes {
                                         participantNamePerParticipant.put(p.getId(), "Decryption failure");
                                     }
                                 });
+
+                        List<ActivityLogItem> activityLogItems = db.get().getActivityLogItems()
+                                .stream()
+                                .filter(li -> li.getAdminId().equals(adminId))
+                                .sorted(Comparator.comparing(ActivityLogItem::getTimestamp).reversed())
+                                .collect(Collectors.toUnmodifiableList());
+                        model.put(ModelKeys.ACTIVITY_LOG_ITEMS, activityLogItems);
                     }
                     ctx.render("pages/index.admin.peb", model);
                     return;

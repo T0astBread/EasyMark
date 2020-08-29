@@ -79,6 +79,8 @@ public class CoursesRoutes {
                             Course newCourse = new Course();
                             newCourse.setAdminId(groupId);
                             newCourse.setName(ctx.formParam(FormKeys.NAME));
+                            logActivity(db, getSession(sessionManager, ctx),
+                                    "Course created: [b]" + newCourse.getName() + "[/b]");
                             return newCourse;
                         })
 
@@ -106,6 +108,8 @@ public class CoursesRoutes {
                                 .findAny()
                                 .orElseThrow(() -> new NotFoundResponse("Course not found"));
                         course.setName(ctx.formParam(FormKeys.NAME));
+                        logActivity(db.get(), getSession(sessionManager, ctx),
+                                "Course updated: [b]" + course.getName() + "[/b]");
                         DBMS.store();
                     }
 
@@ -170,6 +174,8 @@ public class CoursesRoutes {
                                     .collect(Collectors.toUnmodifiableSet()));
                             db.getParticipants().removeIf(participant -> participant.getCourseId().equals(courseId));
                             db.getCourses().remove(course);
+                            logActivity(db, getSession(sessionManager, ctx),
+                                    "Course deleted: [b]" + course.getName() + "[/b]");
                             return course.getAdminId();
                         })
 
@@ -327,6 +333,12 @@ public class CoursesRoutes {
             }
 
             try (DatabaseHandle db = DBMS.openWrite()) {
+                Course course = db.get().getCourses()
+                        .stream()
+                        .filter(c -> c.getId().equals(courseId))
+                        .findAny()
+                        .orElseThrow(() -> new NotFoundResponse("Course not found"));
+
                 for (Participant participant : db.get().getParticipants()) {
                     String warning = getFormParam(formParams, participant.getId() + "-warning");
                     String group = getFormParam(formParams, participant.getId() + "-group");
@@ -377,6 +389,8 @@ public class CoursesRoutes {
                         }
                     }
                 }
+                logActivity(db.get(), getSession(sessionManager, ctx),
+                        "Grading updated: [b]" + course.getName() + "[/b]");
                 DBMS.store();
             }
 

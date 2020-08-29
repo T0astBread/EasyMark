@@ -42,4 +42,5 @@ public class ModelKeys {
     public static final String RATIO = "ratio";
     public static final String GRADE = "grade";
     public static final String SESSIONS = "sessions";
+    public static final String ACTIVITY_LOG_ITEMS = "activityLogItems";
 }

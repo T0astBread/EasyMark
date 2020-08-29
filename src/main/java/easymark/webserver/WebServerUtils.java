@@ -7,6 +7,7 @@ import easymark.webserver.constants.*;
 import easymark.webserver.sessions.*;
 import io.javalin.http.*;
 
+import java.time.*;
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.*;
@@ -173,5 +174,17 @@ public class WebServerUtils {
     public static void redirectFromForm(Context ctx) {
         String redirectUrl = ctx.formParam(FormKeys.REDIRECT_URL);
         ctx.redirect(redirectUrl == null ? "/" : redirectUrl);
+    }
+
+    public static void logActivity(Database db, Session session, String text) {
+        ActivityLogItem logItem = new ActivityLogItem();
+        logItem.setAdminId(session.getUserId());
+        logItem.setTimestamp(LocalDateTime.now());
+        logItem.setOriginatingSessionId(session.getId());
+        logItem.setOriginatingSessionColorR(session.getColor().getRed());
+        logItem.setOriginatingSessionColorG(session.getColor().getGreen());
+        logItem.setOriginatingSessionColorB(session.getColor().getBlue());
+        logItem.setText(text);
+        db.getActivityLogItems().add(logItem);
     }
 }

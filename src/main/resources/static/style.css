@@ -229,11 +229,12 @@ form.add {
 #page-index-admin main > * {
     padding: 0 1rem;
     margin: 0;
+    overflow: auto;
     background: white;
 }
 
-#page-index-admin #courses {
-	grid-area: span 2;
+#page-index-admin main > * > .panel-inner {
+	height: 0;
 }
 
 #page-index-admin #test-requests {

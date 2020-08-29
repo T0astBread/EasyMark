@@ -16,5 +16,7 @@ Cypress.Commands.add("removeNondeterminism", {
 		.attr("value", "")
 	subject.find(".session-list")
 		.html("")
+	subject.find("#activity-log ul")
+		.html("")
 	return subject
 })

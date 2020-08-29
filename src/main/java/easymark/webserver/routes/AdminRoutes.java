@@ -9,6 +9,7 @@ import easymark.webserver.sessions.*;
 import io.javalin.*;
 import io.javalin.http.*;
 
+import java.time.*;
 import java.util.*;
 import java.util.stream.*;
 
@@ -20,6 +21,8 @@ public class AdminRoutes {
 
         new CommonRouteBuilder("admins")
                 .withCreate(roles(UserRole.ADMIN), ctx -> {
+                    Session session = getSession(sessionManager, ctx);
+
                     Admin newAdmin = new Admin();
                     Cryptography.AdminCreationSecrets adminSecrets = Cryptography.generateAdminSecrets();
                     newAdmin.setIek(adminSecrets.iek);
@@ -27,12 +30,12 @@ public class AdminRoutes {
                     newAdmin.setAccessToken(adminSecrets.accessToken);
                     try (DatabaseHandle db = DBMS.openWrite()) {
                         db.get().getAdmins().add(newAdmin);
+                        logActivity(db.get(), session, "Admin created: [b]" + newAdmin.getId() + "[/b]");
                         DBMS.store();
                     }
 
                     String redirectUrl = ctx.queryParam(QueryKeys.RECIRECT_URL);
 
-                    Session session = getSession(sessionManager, ctx);
                     session.setAdminIdDisplay(newAdmin.getId());
                     session.setAtDisplay(adminSecrets.accessTokenStr);
                     ctx.redirect("/admins/show-access-token?redirectUrl=" + (redirectUrl == null ? "/" : redirectUrl));
@@ -56,6 +59,7 @@ public class AdminRoutes {
                 })
 
                 .withDelete(roles(UserRole.ADMIN), (ctx, adminId) -> {
+                    Session session = getSession(sessionManager, ctx);
                     UUID ownAdminId = getSession(sessionManager, ctx).getUserId();
 
                     try (DatabaseHandle db = DBMS.openWrite()) {
@@ -93,6 +97,11 @@ public class AdminRoutes {
                                 })
                                 .collect(Collectors.toUnmodifiableList());
                         db.get().getCourses().removeAll(courses);
+                        db.get().getActivityLogItems()
+                                .removeIf(li -> li.getAdminId().equals(adminId));
+
+                        if (!adminId.equals(ownAdminId))
+                            logActivity(db.get(), session, "Admin deleted: [b]" + adminId + "[/b]");
 
                         DBMS.store();
                     }
@@ -134,8 +143,8 @@ public class AdminRoutes {
 
 
         app.post("/admins/:id/reset-access-token", ctx -> {
-            if (!checkCSRFToken(ctx, ctx.formParam(FormKeys.CSRF_TOKEN)))
-                throw new ForbiddenResponse();
+            checkCSRFFormSubmission(ctx);
+            Session session = getSession(sessionManager, ctx);
 
             UUID adminId;
             try {
@@ -182,10 +191,9 @@ public class AdminRoutes {
                 admin.setIek(newSecrets.iek);
                 admin.setIekSalt(newSecrets.iekSalt);
                 admin.setAccessToken(newSecrets.accessToken);
+                logActivity(db.get(), session, "Reset access token of admin [b]" + adminId + "[/b]");
                 DBMS.store();
             }
-
-            Session session = getSession(sessionManager, ctx);
 
             // Revoke all but the current session of the admin
             sessionManager.getAllOfUser(adminId)

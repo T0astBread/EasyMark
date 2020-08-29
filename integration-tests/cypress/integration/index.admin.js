@@ -139,4 +139,46 @@ describe("Admin index page", () => {
 					})
 			})
 	})
+
+	it("scrolls panels independently", () => {
+		for (let i = 0; i < 10; i++) {
+			cy.get("#courseName")
+				.type("Course ")
+				.type(i)
+				.type("{enter}")
+			cy.clearCookies()
+			cy.visit("/?debugChangeLogin=ADMIN")
+		}
+		["#courses", "#sessions", "#activity-log"].forEach(id => {
+			cy.get(id)
+				.first()
+				.then(panelElem => {
+					expect(panelElem[0].scrollHeight).to.be.greaterThan(panelElem[0].clientHeight)
+				})
+		})
+		cy.get("body")
+			.first()
+			.then(bodyElem => {
+				expect(bodyElem[0].scrollHeight).to.equal(bodyElem[0].clientHeight)
+			})
+	})
+
+	it("logs course creation/deletion", () => {
+		cy.get("#courseName")
+			.type("My Awesome Course{enter}")
+		cy.get("#activity-log")
+			.contains("Course created:")
+			.closest("li")
+			.contains("My Awesome Course")
+		cy.get("#courses")
+			.contains("My Awesome Course")
+			.next('a[href*="/confirm-delete"]')
+			.click()
+		cy.contains("Yes, delete")
+			.click()
+		cy.get("#activity-log")
+			.contains("Course deleted:")
+			.closest("li")
+			.contains("My Awesome Course")
+	})
 })

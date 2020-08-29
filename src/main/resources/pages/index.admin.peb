@@ -10,56 +10,77 @@
 
 {% block content %}
 <div id="courses">
-    <h1>Courses</h1>
-    {% if courses.size() == 0 %}
-        <p>No courses</p>
-    {% else %}
+    <div class="panel-inner">
+        <h1>Courses</h1>
+        {% if courses.size() == 0 %}
+            <p>No courses</p>
+        {% else %}
+            <ul>
+            {% for course in courses %}
+                <li>
+                    <div class="ordered-list-row">
+                        <a href="/courses/{{ course.getID() }}">{{ course.getName() }}</a>
+                        {% include "../partials/ordered-list-buttons.peb" with {
+                            "entitySetName": "courses",
+                            "entity": course
+                        } %}
+                    </div>
+                </li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+        <form action="/courses" method="post" class="add">
+            <input id="courseName"
+                name="name"
+                placeholder="Course name"
+                title="Course name"
+                size="25"
+                required/>
+            <input type="hidden"
+                name="groupId"
+                value="{{ adminId }}"/>
+            {% include "../partials/csrf-input.peb" %}
+            <button type="submit">Add course</button>
+        </form>
+    </div>
+</div>
+<div id="test-requests">
+    <div class="panel-inner">
+        <h1>Test requests</h1>
         <ul>
-        {% for course in courses %}
+        {% for testRequest in testRequests %}
             <li>
-                <div class="ordered-list-row">
-                    <a href="/courses/{{ course.getID() }}">{{ course.getName() }}</a>
-                    {% include "../partials/ordered-list-buttons.peb" with {
-                        "entitySetName": "courses",
-                        "entity": course
-                    } %}
-                </div>
+                <strong>{{ participantNamePerParticipant.get(testRequest.getParticipantId()) }}</strong>
+                on
+                <strong>{{ chapterNamePerChapter.get(testRequest.getChapterId()) }}</strong><br>
+                in {{ courseNamePerChapter.get(testRequest.getChapterId()) }}, {{ testRequest.getTimestamp() | date("yyyy-MM-dd, HH:mm") }}
+                <form action="/test-requests/{{ testRequest.getId() }}/delete" method="post">
+                    <button type="submit"
+                        class="symbol remove-button"
+                        >❌</button>
+                    {% include "../partials/csrf-input.peb" %}
+                </form>
             </li>
         {% endfor %}
         </ul>
-    {% endif %}
-    <form action="/courses" method="post" class="add">
-        <input id="courseName"
-            name="name"
-            placeholder="Course name"
-            title="Course name"
-            size="50"
-            required/>
-        <input type="hidden"
-            name="groupId"
-            value="{{ adminId }}"/>
-        {% include "../partials/csrf-input.peb" %}
-        <button type="submit">Add course</button>
-    </form>
-</div>
-<div id="test-requests">
-    <h1>Test requests</h1>
-    <ul>
-    {% for testRequest in testRequests %}
-        <li>
-            <strong>{{ participantNamePerParticipant.get(testRequest.getParticipantId()) }}</strong>
-            on
-            <strong>{{ chapterNamePerChapter.get(testRequest.getChapterId()) }}</strong><br>
-            in {{ courseNamePerChapter.get(testRequest.getChapterId()) }}, {{ testRequest.getTimestamp() | date("yyyy-MM-dd, HH:mm") }}
-            <form action="/test-requests/{{ testRequest.getId() }}/delete" method="post">
-                <button type="submit"
-                    class="symbol remove-button"
-                    >❌</button>
-                {% include "../partials/csrf-input.peb" %}
-            </form>
-        </li>
-    {% endfor %}
-    </ul>
+    </div>
 </div>
 {% include "../partials/session-list.peb" %}
+<div id="activity-log" style="overflow: auto">
+    <div class="panel-inner">
+        <h1>Activity Log</h1>
+        <ul style="height: 0">
+        {% for logItem in activityLogItems %}
+            <li>
+                <div>{{ logItem.getText() | escape | easymarkup | raw }}</div>
+                <div><small>
+                    <span style="background-color: rgb({{ logItem.getOriginatingSessionColorR() }},{{ logItem.getOriginatingSessionColorG() }},{{ logItem.getOriginatingSessionColorB() }})"
+                        >{{ logItem.getOriginatingSessionId() | shortuuid }}</span>
+                    <span>{{ logItem.getTimestamp() | date("dd-MM-yyyy HH:mm") }}</span>
+                </small></div>
+            </li>
+        {% endfor %}
+        </ul>
+    </div>
+</div>
 {% endblock %}

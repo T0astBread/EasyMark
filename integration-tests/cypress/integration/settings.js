@@ -247,4 +247,58 @@ describe("Settings page", () => {
 				})
 			})
 	})
+
+	it("logs admin creations", () => {
+		cy.contains("Create new admin")
+			.click()
+		cy.visit("/")
+		cy.get("#activity-log li")
+			.then(items => {
+				expect(items.length).to.equal(1)
+				return cy.get("#sessions .current [style]")
+			})
+			.then(currentSessionElem => {
+				cy.get("#activity-log li [style]")
+					.then(logIdElem => {
+						const sessionId = currentSessionElem.text()
+						expect(logIdElem.text()).to.equal(sessionId)
+					})
+			})
+	})
+
+	it("logs admin AT resets", () => {
+		let adminId
+		cy.contains("Create new admin")
+			.click()
+		cy.contains("Continue")
+			.click()
+		cy.contains("no courses")
+			.closest("li")
+			.then(li => {
+				adminId = li.find("> :first-child > *").text()
+				cy.wrap(li)
+					.contains("Reset access token")
+					.click()
+				cy.contains("Reset access token")
+					.click()
+				cy.contains("Continue")
+					.click()
+				return cy.get("#sessions .current [style]")
+			})
+			.then(currentSessionElem => {
+				cy.get("#activity-log li [style]")
+					.each(logIdElem => {
+						const sessionId = currentSessionElem.text()
+						expect(logIdElem.text()).to.equal(sessionId)
+					})
+				cy.get("#activity-log")
+					.contains("Admin created:")
+					.closest("li")
+					.contains(adminId)
+				cy.get("#activity-log")
+					.contains("Reset access token of admin")
+					.closest("li")
+					.contains(adminId)
+			})
+	})
 })

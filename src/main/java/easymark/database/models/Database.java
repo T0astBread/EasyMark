@@ -10,6 +10,7 @@ public class Database {
     private List<Assignment> assignments;
     private List<AssignmentResult> assignmentResults;
     private List<TestRequest> testRequests;
+    private List<ActivityLogItem> activityLogItems;
 
     public Database() {
         this.admins = new ArrayList<>();
@@ -19,6 +20,7 @@ public class Database {
         this.assignments = new ArrayList<>();
         this.assignmentResults = new ArrayList<>();
         this.testRequests = new ArrayList<>();
+        this.activityLogItems = new ArrayList<>();
     }
 
     public List<Admin> getAdmins() {
@@ -47,5 +49,9 @@ public class Database {
 
     public List<TestRequest> getTestRequests() {
         return testRequests;
+    }
+
+    public List<ActivityLogItem> getActivityLogItems() {
+        return activityLogItems;
     }
 }

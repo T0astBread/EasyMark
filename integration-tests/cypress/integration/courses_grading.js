@@ -56,6 +56,11 @@ describe("Grading editor", () => {
 		cy.reload()
 		cy.get('input[value="Warning is out"]')
 			.should("have.attr", "name", "adc6d249-bc3d-4f9d-8421-5440e0d1e991-notes")
+		cy.visit("/")
+		cy.get("#activity-log")
+			.contains("Grading updated:")
+			.closest("li")
+			.then(elem => expect(elem.text()).to.include("Grading updated: Debug Course 2020/21"))
 	})
 
 	it("calculates grades", () => {
@@ -99,6 +104,11 @@ describe("Grading editor", () => {
 				expect(res.body).to.eq("Forbidden")
 			})
 		})
+		cy.visit("/?debugChangeLogin=admin")
+		cy.get("#activity-log")
+			.contains("Participant deleted")
+			.closest("li")
+			.then(elem => expect(elem.text()).to.include("Participant deleted from Debug Course 2020/21: adc6d249-bc3d-4f9d-8421-5440e0d1e991"))
 	})
 
 	it("updates participants", () => {
@@ -132,6 +142,11 @@ describe("Grading editor", () => {
 		cy.get("main")
 			.removeNondeterminism()
 			.snapshot()
+		cy.visit("/")
+		cy.get("#activity-log")
+			.contains("Participant updated")
+			.closest("li")
+			.then(elem => expect(elem.text()).to.include("Participant updated in Debug Course 2020/21: adc6d249-bc3d-4f9d-8421-5440e0d1e991"))
 	})
 
 	it("resets CATs", () => {
@@ -139,7 +154,6 @@ describe("Grading editor", () => {
 			.closest("tr")
 			.contains("Reset")
 			.click()
-
 		cy.get("#cat")
 			.then(catElem => {
 				const cat = catElem.text()
@@ -162,5 +176,10 @@ describe("Grading editor", () => {
 					.removeNondeterminism()
 					.snapshot()
 			})
+		cy.visit("/?debugChangeLogin=admin")
+		cy.get("#activity-log")
+			.contains("Reset CAT")
+			.closest("li")
+			.then(elem => expect(elem.text()).to.include("Reset CAT of participant in Debug Course 2020/21: adc6d249-bc3d-4f9d-8421-5440e0d1e991"))
 	})
 })

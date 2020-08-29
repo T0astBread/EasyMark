@@ -4,6 +4,7 @@ import easymark.database.*;
 import easymark.database.models.*;
 import easymark.webserver.*;
 import easymark.webserver.constants.*;
+import easymark.webserver.sessions.*;
 import io.javalin.*;
 import io.javalin.http.*;
 
@@ -14,7 +15,7 @@ import static easymark.webserver.WebServerUtils.*;
 import static io.javalin.core.security.SecurityUtil.*;
 
 public class ChaptersRoutes {
-    public static void configure(Javalin app) {
+    public static void configure(Javalin app, SessionManager sessionManager) {
         new CommonRouteBuilder("chapters")
                 .withCreate(roles(UserRole.ADMIN), ctx -> {
                     UUID courseId;
@@ -33,6 +34,12 @@ public class ChaptersRoutes {
                     boolean testRequired = "on".equalsIgnoreCase(ctx.formParam(FormKeys.TEST_REQUIRED));
 
                     try (DatabaseHandle db = DBMS.openWrite()) {
+                        Course course = db.get().getCourses()
+                                .stream()
+                                .filter(c -> c.getId().equals(courseId))
+                                .findAny()
+                                .orElseThrow(() -> new NotFoundResponse("Course not found"));
+
                         int maxOrdNum = db.get().getChapters()
                                 .stream()
                                 .filter(chapter -> courseId.equals(chapter.getCourseId()))
@@ -56,6 +63,8 @@ public class ChaptersRoutes {
                             newChapter.setTestAssignmentId(newTestAssignment.getId());
                         }
 
+                        logActivity(db.get(), getSession(sessionManager, ctx),
+                                "Chapter created: [b]" + newChapter.getName() + "[/b] in [b]" + course.getName() + "[/b]");
                         DBMS.store();
                     }
                     ctx.redirect("/courses/" + courseId);
@@ -97,6 +106,11 @@ public class ChaptersRoutes {
                                 .filter(c -> c.getId().equals(chapterId))
                                 .findAny()
                                 .orElseThrow(() -> new NotFoundResponse("Chapter not found"));
+                        Course course = db.get().getCourses()
+                                .stream()
+                                .filter(c -> c.getId().equals(chapter.getCourseId()))
+                                .findAny()
+                                .orElseThrow();
 
                         chapter.setName(name);
                         chapter.setDueDate(dueDate);
@@ -119,6 +133,8 @@ public class ChaptersRoutes {
                             }
                         }
 
+                        logActivity(db.get(), getSession(sessionManager, ctx),
+                                "Chapter updated: [b]" + chapter.getName() + "[/b] in [b]" + course.getName() + "[/b]");
                         DBMS.store();
                     }
 
@@ -166,9 +182,16 @@ public class ChaptersRoutes {
                                     .filter(ch -> ch.getId().equals(chapterId))
                                     .findAny()
                                     .orElseThrow(NotFoundResponse::new);
+                            Course course = db.getCourses()
+                                    .stream()
+                                    .filter(c -> c.getId().equals(chapter.getCourseId()))
+                                    .findAny()
+                                    .orElseThrow();
                             db.getAssignments()
                                     .removeIf(assignment -> chapterId.equals(assignment.getChapterId()));
                             db.getChapters().remove(chapter);
+                            logActivity(db, getSession(sessionManager, ctx),
+                                    "Chapter deleted: [b]" + chapter.getName() + "[/b] from [b]" + course.getName() + "[/b]");
                             return chapter.getCourseId();
                         })
 

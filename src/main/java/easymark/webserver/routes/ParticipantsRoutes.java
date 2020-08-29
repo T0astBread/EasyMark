@@ -37,12 +37,19 @@ public class ParticipantsRoutes {
 
                     Participant newParticipant;
                     try (DatabaseHandle db = DBMS.openWrite()) {
+                        Course course = db.get().getCourses()
+                                .stream()
+                                .filter(c -> c.getId().equals(courseId))
+                                .findAny()
+                                .orElseThrow(() -> new NotFoundResponse("Course not found"));
                         newParticipant = new Participant();
                         newParticipant.setCourseId(courseId);
                         newParticipant.setName(encName);
                         newParticipant.setNameSalt(nameSalt);
                         newParticipant.setCat(Cryptography.accessTokenFromString(rawCat));
                         db.get().getParticipants().add(newParticipant);
+                        logActivity(db.get(), session,
+                                "Participant created in [b]" + course.getName() + ": " + newParticipant.getId() + "[/b]");
                         DBMS.store();
                     }
 
@@ -100,11 +107,18 @@ public class ParticipantsRoutes {
                                 .filter(p -> p.getId().equals(participantId))
                                 .findAny()
                                 .orElseThrow(NotFoundResponse::new);
+                        Course course = db.get().getCourses()
+                                .stream()
+                                .filter(c -> c.getId().equals(participant.getCourseId()))
+                                .findAny()
+                                .orElseThrow();
                         participant.setName(nameEnc);
                         participant.setNameSalt(nameSalt);
                         participant.setWarning(warning);
                         participant.setGroup(group);
                         participant.setNotes(notes);
+                        logActivity(db.get(), session,
+                                "Participant updated in [b]" + course.getName() + ": " + participant.getId() + "[/b]");
                         DBMS.store();
                     }
 
@@ -147,6 +161,7 @@ public class ParticipantsRoutes {
                 })
 
                 .withDelete(roles(UserRole.ADMIN), (ctx, participantId) -> {
+                    Session session = getSession(sessionManager, ctx);
                     Participant participant;
                     try (DatabaseHandle db = DBMS.openWrite()) {
                         participant = db.get().getParticipants()
@@ -154,9 +169,16 @@ public class ParticipantsRoutes {
                                 .filter(p -> p.getId().equals(participantId))
                                 .findAny()
                                 .orElseThrow(NotFoundResponse::new);
+                        Course course = db.get().getCourses()
+                                .stream()
+                                .filter(c -> c.getId().equals(participant.getCourseId()))
+                                .findAny()
+                                .orElseThrow();
                         db.get().getParticipants().remove(participant);
                         db.get().getAssignmentResults()
                                 .removeIf(ar -> ar.getParticipantId().equals(participantId));
+                        logActivity(db.get(), session,
+                                "Participant deleted from [b]" + course.getName() + ": " + participant.getId() + "[/b]");
                         DBMS.store();
                     }
                     sessionManager.getAllOfUser(participantId)
@@ -214,7 +236,14 @@ public class ParticipantsRoutes {
                         .filter(p -> p.getId().equals(participantId))
                         .findAny()
                         .orElseThrow(NotFoundResponse::new);
+                Course course = db.get().getCourses()
+                        .stream()
+                        .filter(c -> c.getId().equals(participant.getCourseId()))
+                        .findAny()
+                        .orElseThrow();
                 participant.setCat(cat);
+                logActivity(db.get(), session,
+                        "Reset CAT of participant in [b]" + course.getName() + ": " + participant.getId() + "[/b]");
                 DBMS.store();
             }
 
@@ -312,6 +341,8 @@ public class ParticipantsRoutes {
                         })
                         .collect(Collectors.toList());
                 db.get().getParticipants().addAll(participants);
+                logActivity(db.get(), session,
+                        "Imported [b]" + participants.size() + "[/b] participants into [b]" + course.get().getName() + "[/b] from Moodle");
                 DBMS.store();
             }
 

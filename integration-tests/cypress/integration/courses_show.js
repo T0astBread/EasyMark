@@ -35,6 +35,11 @@ describe("Course editor", () => {
 			.closest("li")
 			.next()
 			.contains("Test")
+		cy.visit("/")
+		cy.get("#activity-log")
+			.contains("Assignment created:")
+			.closest("li")
+			.then(elem => expect(elem.text()).to.include("Assignment created: Memory complexity vs. computational complexity in Debug Course 2020/21 / Complexity"))
 	})
 
 	it("reorders assignments", () => {
@@ -71,6 +76,11 @@ describe("Course editor", () => {
 			.type("https://example.com{enter}")
 		cy.contains("Algorithmic complexity UPDATED")
 			.snapshot()
+		cy.visit("/")
+		cy.get("#activity-log")
+			.contains("Assignment updated:")
+			.closest("li")
+			.then(elem => expect(elem.text()).to.include("Assignment updated: Algorithmic complexity UPDATED in Debug Course 2020/21 / Complexity"))
 	})
 
 	it("deletes assignments", () => {
@@ -87,6 +97,11 @@ describe("Course editor", () => {
 		cy.get("main")
 			.removeNondeterminism()
 			.snapshot()
+		cy.visit("/")
+		cy.get("#activity-log")
+			.contains("Assignment deleted:")
+			.closest("li")
+			.then(elem => expect(elem.text()).to.include("Assignment deleted: Algorithmic complexity from Debug Course 2020/21 / Complexity"))
 	})
 
 	it("creates chapters", () => {
@@ -104,6 +119,11 @@ describe("Course editor", () => {
 			.closest(".ordered-list-row")
 			.next()
 			.contains("Test")
+		cy.visit("/")
+		cy.get("#activity-log")
+			.contains("Chapter created:")
+			.closest("li")
+			.then(elem => expect(elem.text()).to.include("Chapter created: Kotlin in Debug Course 2020/21"))
 	})
 
 	it("reorders chapters", () => {

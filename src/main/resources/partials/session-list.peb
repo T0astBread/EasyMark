@@ -1,27 +1,29 @@
 <div id="sessions">
-    <h1>Sessions</h1>
-    <ul class="session-list">
-    {% for session in sessions %}
-        {% set current=session.getId() equals currentSessionId %}
-        <li class="{{ current ? "current" : "" }}">
-            <div>
-                <strong>
-                    <span
-                        style="background-color: rgb({{ session.getColor().getRed() }},{{ session.getColor().getGreen() }},{{ session.getColor().getBlue() }})"
-                        >{{ session.getDisplayId() }}</span>
-                    {% if current %}
-                        <span><- current</span>
-                    {% endif %}
-                </strong></div>
-            <div><small>opened from {{ session.getCreationIPAddress() }} at {{ session.getCreationTime() | date("yyyy-MM-dd, HH:mm") }}</small></div>
-            <form action="/sessions/{{ session.getId() }}/delete" method="post">
-                <input type="hidden"
-                    name="redirectUrl"
-                    value="/"/>
-                {% include "../partials/csrf-input.peb" %}
-                <button type="submit">Revoke</button>
-            </form>
-        </li>
-    {% endfor %}
-    </ul>
+    <div class="panel-inner">
+        <h1>Sessions</h1>
+        <ul class="session-list">
+        {% for session in sessions %}
+            {% set current=session.getId() equals currentSessionId %}
+            <li class="{{ current ? "current" : "" }}">
+                <div>
+                    <strong>
+                        <span
+                            style="background-color: rgb({{ session.getColor().getRed() }},{{ session.getColor().getGreen() }},{{ session.getColor().getBlue() }})"
+                            >{{ session.getId() | shortuuid }}</span>
+                        {% if current %}
+                            <span><- current</span>
+                        {% endif %}
+                    </strong></div>
+                <div><small>opened from {{ session.getCreationIPAddress() }} at {{ session.getCreationTime() | date("yyyy-MM-dd, HH:mm") }}</small></div>
+                <form action="/sessions/{{ session.getId() }}/delete" method="post">
+                    <input type="hidden"
+                        name="redirectUrl"
+                        value="/"/>
+                    {% include "../partials/csrf-input.peb" %}
+                    <button type="submit">Revoke</button>
+                </form>
+            </li>
+        {% endfor %}
+        </ul>
+    </div>
 </div>

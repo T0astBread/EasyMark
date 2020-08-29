@@ -1,9 +1,13 @@
 package easymark.webserver.routes;
 
+import easymark.database.*;
+import easymark.pebble.*;
 import easymark.webserver.*;
 import easymark.webserver.sessions.*;
 import io.javalin.*;
 import io.javalin.http.*;
+
+import java.awt.*;
 
 import static easymark.webserver.WebServerUtils.*;
 import static io.javalin.core.security.SecurityUtil.roles;
@@ -22,6 +26,13 @@ public class SessionRoutes {
                         logOut(sessionManager, ctx);
                     else
                         sessionManager.revoke(sessionId);
+
+                    try (DatabaseHandle db = DBMS.openWrite()) {
+                        Color c = toRevoke.getColor();
+                        logActivity(db.get(), ownSession,
+                                "Revoked session [session(" + c.getRed() + "," + c.getGreen() + "," + c.getBlue() + ")]" + ShortUUIDFilter.apply(sessionId) + "[/session]");
+                    }
+
                     redirectFromForm(ctx);
                 })
                 .applyTo(app);
