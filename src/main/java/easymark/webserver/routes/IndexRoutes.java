@@ -39,7 +39,7 @@ public class IndexRoutes {
                 try (DatabaseHandle db = DBMS.openWrite()) {
                     Color c = session.getColor();
                     logActivity(db.get(), session, "Logged in; IP Address: [b]"
-                            + ctx.req.getRemoteAddr()
+                            + getRemoteIPAddress(ctx)
                             + "[/b], Session: [session("
                             + c.getRed() + "," + c.getGreen() + "," + c.getBlue()
                             + ")]" + ShortUUIDFilter.apply(session.getId())

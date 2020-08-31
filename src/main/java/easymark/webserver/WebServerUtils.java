@@ -116,7 +116,7 @@ public class WebServerUtils {
 
         try (DatabaseHandle dbHandle = DBMS.openRead()) {
             Session newSession = null;
-            String creationIPAddress = ctx.req.getRemoteAddr();
+            String creationIPAddress = getRemoteIPAddress(ctx);
 
             Admin matchingAdmin = checkAccessTokenMatch(
                     dbHandle.get().getAdmins(),
@@ -186,5 +186,11 @@ public class WebServerUtils {
         logItem.setOriginatingSessionColorB(session.getColor().getBlue());
         logItem.setText(text);
         db.getActivityLogItems().add(logItem);
+    }
+
+    public static String getRemoteIPAddress(Context ctx) {
+        String ipAddr = ctx.req.getHeader("X-Forwarded-For");
+        if (ipAddr == null) ipAddr = ctx.req.getRemoteAddr();
+        return ipAddr;
     }
 }
