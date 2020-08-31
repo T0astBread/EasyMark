@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.*;
 
 import java.security.*;
 import java.util.*;
+import java.util.stream.*;
 
 public class Utils {
     public static final SecureRandom RANDOM = new SecureRandom();
@@ -65,6 +66,39 @@ public class Utils {
             }
         }
         return found;
+    }
+
+    public static void deleteResourcesOfAdmin(Database db, UUID adminId) {
+        List<Course> courses = db.getCourses()
+                .stream()
+                .filter(course -> course.getAdminId().equals(adminId))
+                .peek(course -> {
+                    List<Chapter> chapters = db.getChapters()
+                            .stream()
+                            .filter(ch -> ch.getCourseId().equals(course.getId()))
+                            .peek(chapter -> {
+                                db.getAssignments()
+                                        .removeIf(assignment -> assignment.getChapterId().equals(chapter.getId()));
+                            })
+                            .collect(Collectors.toUnmodifiableList());
+                    db.getChapters().removeAll(chapters);
+
+                    List<Participant> participants = db.getParticipants()
+                            .stream()
+                            .filter(participant -> participant.getCourseId().equals(course.getId()))
+                            .peek(participant -> {
+                                db.getTestRequests()
+                                        .removeIf(testRequest -> testRequest.getParticipantId().equals(participant.getId()));
+                                db.getAssignmentResults()
+                                        .removeIf(assignmentResult -> assignmentResult.getParticipantId().equals(participant.getId()));
+                            })
+                            .collect(Collectors.toUnmodifiableList());
+                    db.getParticipants().removeAll(participants);
+                })
+                .collect(Collectors.toUnmodifiableList());
+        db.getCourses().removeAll(courses);
+        db.getActivityLogItems()
+                .removeIf(li -> li.getAdminId().equals(adminId));
     }
 
     public static GradingInfo gradingInfo(int totalScore, int maxScore) {

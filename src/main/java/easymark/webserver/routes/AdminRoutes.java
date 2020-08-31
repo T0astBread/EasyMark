@@ -9,7 +9,6 @@ import easymark.webserver.sessions.*;
 import io.javalin.*;
 import io.javalin.http.*;
 
-import java.time.*;
 import java.util.*;
 import java.util.stream.*;
 
@@ -68,37 +67,7 @@ public class AdminRoutes {
                         if (!didExist)
                             throw new NotFoundResponse();
 
-                        // Cascading delete admin
-                        List<Course> courses = db.get().getCourses()
-                                .stream()
-                                .filter(course -> course.getAdminId().equals(adminId))
-                                .peek(course -> {
-                                    List<Chapter> chapters = db.get().getChapters()
-                                            .stream()
-                                            .filter(ch -> ch.getCourseId().equals(course.getId()))
-                                            .peek(chapter -> {
-                                                db.get().getAssignments()
-                                                        .removeIf(assignment -> assignment.getChapterId().equals(chapter.getId()));
-                                            })
-                                            .collect(Collectors.toUnmodifiableList());
-                                    db.get().getChapters().removeAll(chapters);
-
-                                    List<Participant> participants = db.get().getParticipants()
-                                            .stream()
-                                            .filter(participant -> participant.getCourseId().equals(course.getId()))
-                                            .peek(participant -> {
-                                                db.get().getTestRequests()
-                                                        .removeIf(testRequest -> testRequest.getParticipantId().equals(participant.getId()));
-                                                db.get().getAssignmentResults()
-                                                        .removeIf(assignmentResult -> assignmentResult.getParticipantId().equals(participant.getId()));
-                                            })
-                                            .collect(Collectors.toUnmodifiableList());
-                                    db.get().getParticipants().removeAll(participants);
-                                })
-                                .collect(Collectors.toUnmodifiableList());
-                        db.get().getCourses().removeAll(courses);
-                        db.get().getActivityLogItems()
-                                .removeIf(li -> li.getAdminId().equals(adminId));
+                        Utils.deleteResourcesOfAdmin(db.get(), adminId);
 
                         if (!adminId.equals(ownAdminId))
                             logActivity(db.get(), session, "Admin deleted: [b]" + adminId + "[/b]");
