@@ -137,7 +137,10 @@ public class ParticipantsRoutes {
             String participantsCSV = getFormParam(formParams, FormKeys.DATA);
             if (participantsCSV == null)
                 throw new BadRequestResponse("CSV data was not present");
-            int firstNamePosition = Integer.parseInt(getFormParam(formParams, FormKeys.FIRST_NAME_POSITION));
+            String firstNamePositionStr = getFormParam(formParams, FormKeys.FIRST_NAME_POSITION);
+            int firstNamePosition = firstNamePositionStr == null || firstNamePositionStr.isBlank()
+                    ? -1
+                    : Integer.parseInt(firstNamePositionStr);
             int lastNamePosition = Integer.parseInt(getFormParam(formParams, FormKeys.LAST_NAME_POSITION));
             int linesToSkip = Integer.parseInt(getFormParam(formParams, FormKeys.LINES_TO_SKIP));
 
@@ -159,7 +162,9 @@ public class ParticipantsRoutes {
                         .map(line -> line.split("\t"))
                         .filter(fields -> fields.length >= minNumberOfFields)
                         .map(fields -> {
-                            String rawName = fields[firstNamePosition] + " " + fields[lastNamePosition];
+                            String rawName = firstNamePosition == -1
+                                    ? fields[lastNamePosition]
+                                    : fields[firstNamePosition] + " " + fields[lastNamePosition];
                             String nameSalt = Cryptography.generateEncryptionSalt();
                             String nameEnc = Cryptography.encryptData(rawName, nameSalt, uek);
 
