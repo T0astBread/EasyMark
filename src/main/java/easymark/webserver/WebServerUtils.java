@@ -19,7 +19,8 @@ public class WebServerUtils {
         try {
             return sessionManager.get(sessionId);
         } catch (SessionManager.NotRegisteredException | SessionManager.ExpiredException e) {
-            throw new InternalServerErrorResponse("Lost session. Maybe it was revoked by someone else?");
+            logOut(sessionManager, ctx);
+            throw new InternalServerErrorResponse("Lost session. Maybe it was revoked by someone else?\nPlease refresh the page.");
         }
     }
 
