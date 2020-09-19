@@ -101,9 +101,9 @@ public class Utils {
                 .removeIf(li -> li.getAdminId().equals(adminId));
     }
 
-    public static GradingInfo gradingInfo(int totalScore, int maxScore) {
+    public static GradingInfo gradingInfo(float totalScore, float maxScore) {
         if (maxScore > 0) {
-            float ratio = ((float) totalScore) / ((float) maxScore);
+            float ratio = totalScore / maxScore;
             float ratioPercent = Math.round(ratio * 10000) / 100f;
 
             float grade = (ratio * 100 - 106.25f) / -12.5f;
@@ -117,15 +117,15 @@ public class Utils {
     }
 
     public static class GradingInfo {
-        public final int score;
-        public final int maxScore;
+        public final float score;
+        public final float maxScore;
         public final float ratio;
         public final float ratioPercent;
         public final float grade;
         public final String ratioPercentStr;
         public final String gradeStr;
 
-        public GradingInfo(int score, int maxScore, float ratio, float ratioPercent, float grade, String ratioPercentStr, String gradeStr) {
+        public GradingInfo(float score, float maxScore, float ratio, float ratioPercent, float grade, String ratioPercentStr, String gradeStr) {
             this.score = score;
             this.maxScore = maxScore;
             this.ratio = ratio;

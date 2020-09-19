@@ -155,8 +155,8 @@ public class IndexRoutes {
                     Map<UUID, AssignmentResult> assignmentResultPerAssignment = new HashMap<>();
                     Map<UUID, Assignment> testAssignmentPerChapter = new HashMap<>();
                     Set<UUID> chaptersWithTestRequests = new HashSet<>();
-                    AtomicInteger totalScore = new AtomicInteger();
-                    AtomicInteger maxScore = new AtomicInteger();
+                    AtomicReference<Float> totalScore = new AtomicReference<>();
+                    AtomicReference<Float> maxScore = new AtomicReference<>();
                     try (DatabaseHandle db = DBMS.openRead()) {
                         UUID courseId = db.get().getParticipants()
                                 .stream()
@@ -201,8 +201,8 @@ public class IndexRoutes {
                                                 .findAny()
                                                 .ifPresent(ar -> {
                                                     assignmentResultPerAssignment.put(a.getId(), ar);
-                                                    totalScore.addAndGet(ar.getScore());
-                                                    maxScore.addAndGet(a.getMaxScore());
+                                                    totalScore.updateAndGet(score -> score + ar.getScore());
+                                                    maxScore.updateAndGet(score -> score + a.getMaxScore());
                                                 });
                                     });
 

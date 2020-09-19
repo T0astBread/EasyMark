@@ -206,8 +206,8 @@ public class CoursesRoutes {
             List<Participant> participants;
             Map<UUID, Map<UUID, AssignmentResult>> assignmentResultsPerAssignmentPerParticipant;
             Map<UUID, String> namePerParticipant;
-            Map<UUID, Integer> scorePerParticipant;
-            Map<UUID, Integer> maxScorePerParticipant;
+            Map<UUID, Float> scorePerParticipant;
+            Map<UUID, Float> maxScorePerParticipant;
             Map<UUID, String> ratioPerParticipant;
             Map<UUID, String> gradePerParticipant;
             try (DatabaseHandle db = DBMS.openRead()) {
@@ -270,11 +270,11 @@ public class CoursesRoutes {
                                 namePerParticipant.put(participant.getId(), "Decryption failure");
                             }
 
-                            int totalScore = assignmentResults.stream()
-                                    .mapToInt(AssignmentResult::getScore)
+                            float totalScore = (float) assignmentResults.stream()
+                                    .mapToDouble(AssignmentResult::getScore)
                                     .sum();
-                            int maxScore = assignmentResults.stream()
-                                    .mapToInt(assignmentResult -> db.get().getAssignments()
+                            float maxScore = (float) assignmentResults.stream()
+                                    .mapToDouble(assignmentResult -> db.get().getAssignments()
                                             .stream()
                                             .filter(assignment -> assignment.getId().equals(assignmentResult.getAssignmentId()))
                                             .findAny()
@@ -365,9 +365,9 @@ public class CoursesRoutes {
                                     ar.getParticipantId().equals(participant.getId()) &&
                                             ar.getAssignmentId().equals(assignment.getId()));
                         } else {
-                            int scoreFormValue;
+                            float scoreFormValue;
                             try {
-                                scoreFormValue = Integer.parseInt(scoreFormValueStr);
+                                scoreFormValue = Float.parseFloat(scoreFormValueStr);
                             } catch (IllegalArgumentException e) {
                                 throw new BadRequestResponse();
                             }

@@ -4,7 +4,7 @@ import java.util.*;
 
 public class Assignment extends Entity implements Ordered {
     private String name;
-    private int maxScore;
+    private float maxScore;
     private int ordNum;
     private String link;
     private UUID chapterId;
@@ -17,11 +17,11 @@ public class Assignment extends Entity implements Ordered {
         this.name = name;
     }
 
-    public int getMaxScore() {
+    public float getMaxScore() {
         return maxScore;
     }
 
-    public void setMaxScore(int maxScore) {
+    public void setMaxScore(float maxScore) {
         this.maxScore = maxScore;
     }
 

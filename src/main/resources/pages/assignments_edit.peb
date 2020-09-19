@@ -9,6 +9,7 @@
         required/>
     <label for="maxScore">Max. score: </label>
     <input type="number"
+        step="any"
         id="maxScore"
         name="maxScore"
         value="{{ assignment.getMaxScore() }}"

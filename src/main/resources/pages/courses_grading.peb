@@ -102,6 +102,7 @@
                         {% set assignmentResult=assignmentResultPerAssignment.get(assignment.getId()) %}
                         <td>
                             <input type="number"
+                                step="any"
                                 name="{{ participant.getId() }}-score-{{ assignment.getId() }}"
                                 value="{{ assignmentResult is null ? "" : assignmentResult.getScore() }}"
                                 class="score-input"

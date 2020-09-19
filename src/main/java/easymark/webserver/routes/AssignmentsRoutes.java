@@ -80,7 +80,7 @@ public class AssignmentsRoutes {
                                 .findAny()
                                 .orElseThrow();
                         try {
-                            assignment.setMaxScore(Integer.parseInt(ctx.formParam(FormKeys.MAX_SCORE)));
+                            assignment.setMaxScore(Float.parseFloat(ctx.formParam(FormKeys.MAX_SCORE)));
                         } catch (Exception e) {
                             throw new BadRequestResponse("Max. score must be a number");
                         }

@@ -5,7 +5,7 @@ import java.util.*;
 public class AssignmentResult extends Entity {
     private UUID participantId;
     private UUID assignmentId;
-    private int score;
+    private float score;
 
     public UUID getParticipantId() {
         return participantId;
@@ -23,11 +23,11 @@ public class AssignmentResult extends Entity {
         this.assignmentId = assignmentId;
     }
 
-    public int getScore() {
+    public float getScore() {
         return score;
     }
 
-    public void setScore(int score) {
+    public void setScore(float score) {
         this.score = score;
     }
 }
