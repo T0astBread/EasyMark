@@ -465,9 +465,4 @@ public class CoursesRoutes {
             ctx.result(fileContents);
         }, roles(UserRole.ADMIN));
     }
-
-    private static String getFormParam(Map<String, List<String>> formParams, String key) {
-        List<String> vals = formParams.getOrDefault(key, null);
-        return vals == null ? null : vals.get(0);
-    }
 }

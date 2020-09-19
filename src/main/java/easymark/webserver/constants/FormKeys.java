@@ -16,4 +16,7 @@ public class FormKeys {
     public static final String OLD_ACCESS_TOKEN = "oldAccessToken";
     public static final String DUE_DATE = "dueDate";
     public static final String DATA = "data";
+    public static final String FIRST_NAME_POSITION = "firstNamePosition";
+    public static final String LAST_NAME_POSITION = "lastNamePosition";
+    public static final String LINES_TO_SKIP = "linesToSkip";
 }

@@ -194,4 +194,9 @@ public class WebServerUtils {
         if (ipAddr == null) ipAddr = ctx.req.getRemoteAddr();
         return ipAddr;
     }
+
+    public static String getFormParam(Map<String, List<String>> formParams, String key) {
+        List<String> vals = formParams.getOrDefault(key, null);
+        return vals == null ? null : vals.get(0);
+    }
 }

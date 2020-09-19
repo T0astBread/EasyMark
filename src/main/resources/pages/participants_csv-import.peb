@@ -1,0 +1,40 @@
+{% extends "../partials/page.peb" %}
+
+{% set pageName="participant-import" %}
+
+{% block content %}
+<h1>Import participants</h1>
+<p>Import participants from a CSV file into <strong>{{ course.getName() }}</strong></p>
+<p><small>If your CSV mixes first and last names, you can leave the first name field blank.</small></p>
+<form action="/participants/csv-import" method="post" id="participant-import-form">
+    <label for="firstNameInput">Position of the first name:</label>
+    <input type="number"
+        id="firstNameInput"
+        name="firstNamePosition"
+        value="2"/>
+    <label for="lastNameInput">Position of the last name:</label>
+    <input type="number"
+        id="lastNameInput"
+        name="lastNamePosition"
+        value="1"/>
+    <label for="linesToSkipInput">Lines to skip before parsing:</label>
+    <input type="number"
+        id="linesToSkipInput"
+        name="linesToSkip"
+        value="1"/>
+    <label for="dataInput">Paste the contents of your CSV file here:</label>
+    <textarea id="dataInput"
+        name="data" rows="20"></textarea>
+    <div class="last-row">
+        <a href="{{ cancelUrl }}">Cancel</a>
+        <button type="submit">Import</button>
+    </div>
+    <input type="hidden"
+        name="courseId"
+        value="{{ course.getId() }}"/>
+    <input type="hidden"
+        name="redirectUrl"
+        value="{{ redirectUrl }}"/>
+    {% include "../partials/csrf-input.peb" %}
+</form>
+{% endblock %}

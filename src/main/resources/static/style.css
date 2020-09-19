@@ -450,6 +450,37 @@ form.add {
     background: #52d1ff;
 }
 
+#page-participant-import p {
+	margin-bottom: 1rem;
+}
+
+#page-participant-import #participant-import-form {
+	display: block;
+	width: 100vw;
+	max-width: 50rem;
+	display: grid;
+	grid-template-columns: 20rem 1fr;
+}
+
+#page-participant-import .last-row,
+#page-participant-import label[for=dataInput],
+#page-participant-import #dataInput {
+	grid-column: span 2;
+}
+
+#page-participant-import input:not(#linesToSkipInput) {
+	margin-bottom: .5rem;
+}
+
+#page-participant-import label[for=dataInput] {
+	margin-top: 1rem;
+	margin-bottom: .5rem;
+}
+
+#page-participant-import #dataInput {
+	margin-bottom: 1rem;
+}
+
 #page-index-participant {
 	padding: 0;
 }
