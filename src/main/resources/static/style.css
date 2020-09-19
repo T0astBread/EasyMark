@@ -427,7 +427,7 @@ form.add {
     margin-left: .1rem;
 }
 
-#page-courses-grading #bulk-import-link {
+#page-courses-grading .bottom-link {
     display: inline-block;
     margin-left: 1em;
     font-size: .7em;

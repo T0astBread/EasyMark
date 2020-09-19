@@ -10,6 +10,8 @@ import io.javalin.*;
 import io.javalin.http.*;
 
 import java.text.*;
+import java.time.*;
+import java.time.format.*;
 import java.util.*;
 import java.util.stream.*;
 
@@ -395,6 +397,72 @@ public class CoursesRoutes {
             }
 
             ctx.redirect("/courses/" + courseId + "/grading");
+        }, roles(UserRole.ADMIN));
+
+        app.get("/courses/:id/grades-csv", ctx -> {
+            UUID courseId;
+            try {
+                courseId = UUID.fromString(ctx.pathParam(PathParams.ID));
+            } catch (Exception e) {
+                throw new BadRequestResponse("Bad request");
+            }
+
+            String uek = getUek(ctx, getSession(sessionManager, ctx));
+
+            String courseName;
+            Map<UUID, List<AssignmentResult>> assignmentResultsPerParticipant;
+            Map<UUID, Float> maxScorePerAssignment;
+            Map<UUID, String> namePerParticipant = new HashMap<>();
+            Set<UUID> participantIDs = new HashSet<>();
+            Set<UUID> assignmentIDs = new HashSet<>();
+            try (DatabaseHandle db = DBMS.openRead()) {
+                courseName = db.get().getCourses()
+                        .stream()
+                        .filter(c -> c.getId().equals(courseId))
+                        .findAny()
+                        .orElseThrow(() -> new NotFoundResponse("Course not found"))
+                        .getName();
+                for (Participant participant : db.get().getParticipants()) {
+                    if (!participant.getCourseId().equals(courseId))
+                        continue;
+                    participantIDs.add(participant.getId());
+                    try {
+                        String name = Cryptography.decryptData(participant.getName(), participant.getNameSalt(), uek);
+                        namePerParticipant.put(participant.getId(), name);
+                    } catch (Exception e) {
+                        throw new InternalServerErrorResponse("Failed to decrypt student names\n" + e.getClass().getName() + ": " + e.getMessage());
+                    }
+                }
+                assignmentResultsPerParticipant = db.get().getAssignmentResults()
+                        .stream()
+                        .filter(ar -> participantIDs.contains(ar.getParticipantId()))
+                        .peek(ar -> assignmentIDs.add(ar.getAssignmentId()))
+                        .collect(Collectors.groupingBy(AssignmentResult::getParticipantId));
+                maxScorePerAssignment = db.get().getAssignments()
+                        .stream()
+                        .filter(a -> assignmentIDs.contains(a.getId()))
+                        .collect(Collectors.toMap(Entity::getId, Assignment::getMaxScore));
+            }
+            String fileContents = participantIDs
+                    .stream()
+                    .map(participantId -> {
+                        List<AssignmentResult> assignmentResults = assignmentResultsPerParticipant.getOrDefault(participantId, Collections.EMPTY_LIST);
+                        float totalScore = (float) assignmentResults.stream()
+                                .mapToDouble(AssignmentResult::getScore)
+                                .sum();
+                        float maxScore = (float) assignmentResults.stream()
+                                .mapToDouble(ar -> maxScorePerAssignment.get(ar.getAssignmentId()))
+                                .sum();
+                        Utils.GradingInfo gradingInfo = Utils.gradingInfo(totalScore, maxScore);
+                        String name = namePerParticipant.get(participantId);
+                        return String.join(Utils.CSV_DELIMITER, name, Float.toString(gradingInfo.ratioPercent), Float.toString(gradingInfo.grade));
+                    })
+                    .collect(Collectors.joining("\n")) + "\n";
+
+            String fileName = courseName.replaceAll("\\s", "_") + "__" + LocalDate.now().format(DateTimeFormatter.ISO_DATE) + "__grades.csv";
+            ctx.header("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
+            ctx.header("Content-Type", "text/csv");
+            ctx.result(fileContents);
         }, roles(UserRole.ADMIN));
     }
 
