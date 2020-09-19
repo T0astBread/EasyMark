@@ -155,8 +155,8 @@ public class IndexRoutes {
                     Map<UUID, AssignmentResult> assignmentResultPerAssignment = new HashMap<>();
                     Map<UUID, Assignment> testAssignmentPerChapter = new HashMap<>();
                     Set<UUID> chaptersWithTestRequests = new HashSet<>();
-                    AtomicReference<Float> totalScore = new AtomicReference<>();
-                    AtomicReference<Float> maxScore = new AtomicReference<>();
+                    AtomicReference<Float> totalScore = new AtomicReference<>(0f);
+                    AtomicReference<Float> maxScore = new AtomicReference<>(0f);
                     try (DatabaseHandle db = DBMS.openRead()) {
                         UUID courseId = db.get().getParticipants()
                                 .stream()
