@@ -183,7 +183,7 @@ public class ParticipantsRoutes {
                         .collect(Collectors.toList());
                 db.get().getParticipants().addAll(participants);
                 logActivity(db.get(), session,
-                        "Imported [b]" + participants.size() + "[/b] participants into [b]" + course.get().getName() + "[/b] from Moodle");
+                        "Imported [b]" + participants.size() + "[/b] participants into [b]" + course.get().getName() + "[/b] from a CSV file");
                 DBMS.store();
             }
 
