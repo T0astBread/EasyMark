@@ -107,7 +107,7 @@ public class Utils {
             float ratioPercent = Math.round(ratio * 10000) / 100f;
 
             float grade = (ratio * 100 - 106.25f) / -12.5f;
-            grade = Math.max(.5f, Math.min(5, grade));
+            grade = Math.max(.5f, Math.min(5.5f, grade));
             grade = Math.round(grade * 100) / 100f;
 
             return new GradingInfo(totalScore, maxScore, ratio, ratioPercent, grade, Float.toString(ratioPercent), Float.toString(grade));
