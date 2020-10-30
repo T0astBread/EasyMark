@@ -10,8 +10,8 @@ These are the course access tokens for the newly imported participants.<br>
     <tbody>
     {% for participant in participants %}
         <tr>
-            <td>{{ participant.key }}</td>
-            <td style="padding-left: 1em"><strong>{{ participant.value }}</strong></td>
+            <td>{{ participant.left }}</td>
+            <td style="padding-left: 1em"><strong>{{ participant.right }}</strong></td>
         </tr>
     {% endfor %}
     </tbody>

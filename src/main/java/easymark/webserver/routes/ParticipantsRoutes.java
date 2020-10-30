@@ -146,7 +146,7 @@ public class ParticipantsRoutes {
 
             int minNumberOfFields = Math.max(firstNamePosition, lastNamePosition) + 1;
 
-            Map<String, String> participantNameToCat = new HashMap<>();
+            List<Utils.Pair<String, String>> participantNameAndCat = new ArrayList<>();
             try (DatabaseHandle db = DBMS.openWrite()) {
                 Optional<Course> course = db.get().getCourses()
                         .stream()
@@ -177,7 +177,7 @@ public class ParticipantsRoutes {
                             participant.setNameSalt(nameSalt);
                             participant.setCat(cat);
 
-                            participantNameToCat.put(rawName, rawCat);
+                            participantNameAndCat.add(new Utils.Pair<>(rawName, rawCat));
                             return participant;
                         })
                         .collect(Collectors.toList());
@@ -193,7 +193,7 @@ public class ParticipantsRoutes {
 
             ctx.header("Cache-Control", "no-store");
             ctx.render("pages/participants_csv-import_show-cats.peb", Map.of(
-                    ModelKeys.PARTICIPANTS, participantNameToCat,
+                    ModelKeys.PARTICIPANTS, participantNameAndCat,
                     ModelKeys.REDIRECT_URL, redirectUrl
             ));
         }, roles(UserRole.ADMIN));
