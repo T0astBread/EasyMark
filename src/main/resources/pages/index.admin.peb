@@ -29,7 +29,7 @@
             {% endfor %}
             </ul>
         {% endif %}
-        <form action="/courses" method="post" class="add">
+        <form action="/courses" method="post" class="add" accept-charset="utf-8">
             <input id="courseName"
                 name="name"
                 placeholder="Course name"

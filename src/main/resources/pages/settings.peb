@@ -4,7 +4,7 @@
 <h1>Server Settings</h1>
 <h2>Encrypted Data</h2>
 <a href="/encrypted-data">Export...</a>
-<form action="/encrypted-data" method="post">
+<form action="/encrypted-data" method="post" accept-charset="utf-8">
     <textarea name="data"></textarea>
     <button type="submit">Import</button>
     <input type="hidden"

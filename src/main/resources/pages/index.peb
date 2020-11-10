@@ -7,7 +7,7 @@
 
 
 {% block content %}
-<form id="login" action="/login" method="post">
+<form id="login" action="/login" method="post" accept-charset="utf-8">
     <label for="accessToken">Access Token</label>
     <input type="password"
         name="accessToken"

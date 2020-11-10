@@ -133,7 +133,7 @@
 </div>
 <div style="display: none">
     <form action="/participants" method="post"
-        id="create-participant-form">
+        id="create-participant-form" accept-charset="utf-8">
         <input type="hidden"
             name="courseId"
             value="{{ course.getID() }}"/>
