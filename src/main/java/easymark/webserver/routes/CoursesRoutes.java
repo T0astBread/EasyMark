@@ -290,12 +290,24 @@ public class CoursesRoutes {
                             ratioPerParticipant.put(participant.getId(), gradingInfo.ratioPercentStr);
                             gradePerParticipant.put(participant.getId(), gradingInfo.gradeStr);
                         })
-                        .sorted(Comparator.comparing(participant -> {
-                            String name = namePerParticipant.getOrDefault(participant.getId(), "");
-                            int lastNameStart = name.lastIndexOf(" ");
-                            String lastName = lastNameStart == -1 ? name : name.substring(lastNameStart);
-                            return lastName;
-                        }, Collator.getInstance()::compare))
+                        .sorted((p1, p2) -> {
+                            // Sort by group, then last name
+
+                            boolean p1GroupIsEmpty = p1.getGroup() == null || p1.getGroup().isBlank();
+                            boolean p2GroupIsEmpty = p2.getGroup() == null || p2.getGroup().isBlank();
+                            if (p1GroupIsEmpty) {
+                                if (p2GroupIsEmpty)
+                                    return Utils.compareLastNames(p1, p2, namePerParticipant);
+                                else return 1;
+                            }
+                            if (p2GroupIsEmpty)
+                                return -1;
+
+                            int groupComparison = Collator.getInstance().compare(p1.getGroup(), p2.getGroup());
+                            if (groupComparison != 0) return groupComparison;
+
+                            return Utils.compareLastNames(p1, p2, namePerParticipant);
+                        })
                         .collect(Collectors.toUnmodifiableList());
             }
             final int assignmentCount = assignmentsPerChapter.values()

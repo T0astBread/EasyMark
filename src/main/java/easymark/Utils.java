@@ -8,6 +8,7 @@ import org.springframework.security.crypto.bcrypt.*;
 import org.springframework.security.crypto.password.*;
 
 import java.security.*;
+import java.text.*;
 import java.util.*;
 import java.util.stream.*;
 
@@ -114,6 +115,18 @@ public class Utils {
         } else {
             return new GradingInfo(totalScore, maxScore, 0f, 0f, 3f, "-", "-");
         }
+    }
+
+    public static String getLastName(Participant participant, Map<UUID, String> namePerParticipant) {
+        String name = namePerParticipant.getOrDefault(participant.getId(), "");
+        int lastNameStart = name.lastIndexOf(" ");
+        return lastNameStart == -1 ? name : name.substring(lastNameStart);
+    }
+
+    public static int compareLastNames(Participant p1, Participant p2, Map<UUID, String> namePerParticipant) {
+        String p1LastName = getLastName(p1, namePerParticipant);
+        String p2LastName = getLastName(p2, namePerParticipant);
+        return Collator.getInstance().compare(p1LastName, p2LastName);
     }
 
     public static class GradingInfo {
