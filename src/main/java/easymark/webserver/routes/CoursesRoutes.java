@@ -290,24 +290,7 @@ public class CoursesRoutes {
                             ratioPerParticipant.put(participant.getId(), gradingInfo.ratioPercentStr);
                             gradePerParticipant.put(participant.getId(), gradingInfo.gradeStr);
                         })
-                        .sorted((p1, p2) -> {
-                            // Sort by group, then last name
-
-                            boolean p1GroupIsEmpty = p1.getGroup() == null || p1.getGroup().isBlank();
-                            boolean p2GroupIsEmpty = p2.getGroup() == null || p2.getGroup().isBlank();
-                            if (p1GroupIsEmpty) {
-                                if (p2GroupIsEmpty)
-                                    return Utils.compareLastNames(p1, p2, namePerParticipant);
-                                else return 1;
-                            }
-                            if (p2GroupIsEmpty)
-                                return -1;
-
-                            int groupComparison = Collator.getInstance().compare(p1.getGroup(), p2.getGroup());
-                            if (groupComparison != 0) return groupComparison;
-
-                            return Utils.compareLastNames(p1, p2, namePerParticipant);
-                        })
+                        .sorted((p1, p2) -> Utils.compareGroupThenLastName(p1, p2, namePerParticipant))
                         .collect(Collectors.toUnmodifiableList());
             }
             final int assignmentCount = assignmentsPerChapter.values()
@@ -422,11 +405,12 @@ public class CoursesRoutes {
             String uek = getUek(ctx, getSession(sessionManager, ctx));
 
             String courseName;
+            List<Assignment> assignments;
+            List<Participant> participants = new ArrayList<>();
             Map<UUID, List<AssignmentResult>> assignmentResultsPerParticipant;
-            Map<UUID, Float> maxScorePerAssignment;
+            Map<UUID, Float> maxScorePerAssignment = new HashMap<>();
             Map<UUID, String> namePerParticipant = new HashMap<>();
             Set<UUID> participantIDs = new HashSet<>();
-            Set<UUID> assignmentIDs = new HashSet<>();
             try (DatabaseHandle db = DBMS.openRead()) {
                 courseName = db.get().getCourses()
                         .stream()
@@ -434,9 +418,22 @@ public class CoursesRoutes {
                         .findAny()
                         .orElseThrow(() -> new NotFoundResponse("Course not found"))
                         .getName();
+
+                Set<UUID> chapterIDs = db.get().getChapters()
+                        .stream()
+                        .filter(c -> c.getCourseId().equals(courseId))
+                        .map(Entity::getId)
+                        .collect(Collectors.toUnmodifiableSet());
+                assignments = db.get().getAssignments()
+                        .stream()
+                        .filter(a -> chapterIDs.contains(a.getChapterId()))
+                        .peek(a -> maxScorePerAssignment.put(a.getId(), a.getMaxScore()))
+                        .collect(Collectors.toList());
+
                 for (Participant participant : db.get().getParticipants()) {
                     if (!participant.getCourseId().equals(courseId))
                         continue;
+                    participants.add(participant);
                     participantIDs.add(participant.getId());
                     try {
                         String name = Cryptography.decryptData(participant.getName(), participant.getNameSalt(), uek);
@@ -448,17 +445,19 @@ public class CoursesRoutes {
                 assignmentResultsPerParticipant = db.get().getAssignmentResults()
                         .stream()
                         .filter(ar -> participantIDs.contains(ar.getParticipantId()))
-                        .peek(ar -> assignmentIDs.add(ar.getAssignmentId()))
                         .collect(Collectors.groupingBy(AssignmentResult::getParticipantId));
-                maxScorePerAssignment = db.get().getAssignments()
-                        .stream()
-                        .filter(a -> assignmentIDs.contains(a.getId()))
-                        .collect(Collectors.toMap(Entity::getId, Assignment::getMaxScore));
             }
-            String fileContents = participantIDs
+            String header = String.join(Utils.CSV_DELIMITER,
+                    "Name", "Warning", "Group", "Notes",
+                    "Score", "Max", "RatioPercent", "Grade",
+                    assignments.stream()
+                            .map(a -> Utils.escapeCSVField(a.getName()))
+                            .collect(Collectors.joining(Utils.CSV_DELIMITER)));
+            String fileContents = header + "\n" + participants
                     .stream()
-                    .map(participantId -> {
-                        List<AssignmentResult> assignmentResults = assignmentResultsPerParticipant.getOrDefault(participantId, Collections.EMPTY_LIST);
+                    .sorted((p1, p2) -> Utils.compareGroupThenLastName(p1, p2, namePerParticipant))
+                    .map(participant -> {
+                        List<AssignmentResult> assignmentResults = assignmentResultsPerParticipant.getOrDefault(participant.getId(), Collections.EMPTY_LIST);
                         float totalScore = (float) assignmentResults.stream()
                                 .mapToDouble(AssignmentResult::getScore)
                                 .sum();
@@ -466,12 +465,29 @@ public class CoursesRoutes {
                                 .mapToDouble(ar -> maxScorePerAssignment.get(ar.getAssignmentId()))
                                 .sum();
                         Utils.GradingInfo gradingInfo = Utils.gradingInfo(totalScore, maxScore);
-                        String name = namePerParticipant.get(participantId);
-                        return String.join(Utils.CSV_DELIMITER, name, Float.toString(gradingInfo.ratioPercent), Float.toString(gradingInfo.grade));
+                        String name = namePerParticipant.get(participant.getId());
+                        String assignmentScores = assignments.stream()
+                                .map(a -> assignmentResults.stream()
+                                        .filter(ar -> ar.getAssignmentId().equals(a.getId()))
+                                        .findAny()
+                                        .map(ar -> Float.toString(ar.getScore()))
+                                        .orElse(""))
+                                .collect(Collectors.joining(Utils.CSV_DELIMITER));
+                        return Stream.of(name,
+                                participant.getWarning(),
+                                participant.getGroup(),
+                                participant.getNotes(),
+                                Float.toString(totalScore),
+                                Float.toString(maxScore),
+                                Float.toString(gradingInfo.ratioPercent),
+                                Float.toString(gradingInfo.grade))
+                                .map(Utils::escapeCSVField)
+                                .collect(Collectors.joining(Utils.CSV_DELIMITER))
+                                + Utils.CSV_DELIMITER + assignmentScores;
                     })
                     .collect(Collectors.joining("\n")) + "\n";
 
-            String fileName = courseName.replaceAll("\\s", "_") + "__" + LocalDate.now().format(DateTimeFormatter.ISO_DATE) + "__grades.csv";
+            String fileName = courseName.replaceAll("\\s", "_") + "__" + LocalDate.now().format(DateTimeFormatter.ISO_DATE) + ".csv";
             ctx.header("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
             ctx.header("Content-Type", "text/csv");
             ctx.result(fileContents);

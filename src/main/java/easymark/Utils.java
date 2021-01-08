@@ -117,16 +117,49 @@ public class Utils {
         }
     }
 
-    public static String getLastName(Participant participant, Map<UUID, String> namePerParticipant) {
-        String name = namePerParticipant.getOrDefault(participant.getId(), "");
-        int lastNameStart = name.lastIndexOf(" ");
-        return lastNameStart == -1 ? name : name.substring(lastNameStart);
+    public static int compareGroupThenLastName(Participant p1, Participant p2, Map<UUID, String> namePerParticipant) {
+        boolean p1GroupIsEmpty = p1.getGroup() == null || p1.getGroup().isBlank();
+        boolean p2GroupIsEmpty = p2.getGroup() == null || p2.getGroup().isBlank();
+        if (p1GroupIsEmpty) {
+            if (p2GroupIsEmpty)
+                return Utils.compareLastNames(p1, p2, namePerParticipant);
+            else return 1;
+        }
+        if (p2GroupIsEmpty)
+            return -1;
+
+        int groupComparison = Collator.getInstance().compare(p1.getGroup(), p2.getGroup());
+        if (groupComparison != 0) return groupComparison;
+
+        return Utils.compareLastNames(p1, p2, namePerParticipant);
     }
 
-    public static int compareLastNames(Participant p1, Participant p2, Map<UUID, String> namePerParticipant) {
+    public static String escapeCSVField(String fieldText) {
+        return escapeCSVField(fieldText, Utils.CSV_DELIMITER);
+    }
+
+    public static String escapeCSVField(String fieldText, String delimiter) {
+        boolean quote = fieldText.matches("^\\s.*")
+                || fieldText.matches(".*\\s$")
+                || fieldText.contains(delimiter)
+                || fieldText.contains("\n")
+                || fieldText.contains("\"");
+        String quoteEscapedFieldText = fieldText.replaceAll("\"", "\"\"");
+        return quote
+                ? "\"" + quoteEscapedFieldText + "\""
+                : quoteEscapedFieldText;
+    }
+
+    private static int compareLastNames(Participant p1, Participant p2, Map<UUID, String> namePerParticipant) {
         String p1LastName = getLastName(p1, namePerParticipant);
         String p2LastName = getLastName(p2, namePerParticipant);
         return Collator.getInstance().compare(p1LastName, p2LastName);
+    }
+
+    private static String getLastName(Participant participant, Map<UUID, String> namePerParticipant) {
+        String name = namePerParticipant.getOrDefault(participant.getId(), "");
+        int lastNameStart = name.lastIndexOf(" ");
+        return lastNameStart == -1 ? name : name.substring(lastNameStart);
     }
 
     public static class GradingInfo {
