@@ -337,6 +337,9 @@ public class CoursesRoutes {
                         .orElseThrow(() -> new NotFoundResponse("Course not found"));
 
                 for (Participant participant : db.get().getParticipants()) {
+                    if (!participant.getCourseId().equals(courseId))
+                        continue;
+
                     String warning = getFormParam(formParams, participant.getId() + "-warning");
                     String group = getFormParam(formParams, participant.getId() + "-group");
                     String notes = getFormParam(formParams, participant.getId() + "-notes");
