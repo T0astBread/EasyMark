@@ -41,11 +41,14 @@
                 {% for chapter in chapters %}
                     {% set assignmentsForChapter=assignmentsPerChapter.get(chapter.getID()) %}
                     {% for assignment in assignmentsForChapter %}
-                        <th title="{{ assignment.getName() }}">
+                        <th class="assignment-header" title="{{ assignment.getName() }} (max. score: {{ assignment.getMaxScore() }})">
                             <div style="width: 100%; display: inline-flex; flex-direction: row">
                                 <div style="flex: 1 1 0; min-width: 0; width: 0">
                                     <div style="text-overflow: ellipsis; overflow: hidden">
                                         {% include "../partials/assignment-link.peb" %}
+                                        <div class="max-score-label">
+                                            {{ assignment.getMaxScore() }}
+                                        </div>
                                     </div>
                                 </div>
                             </div>

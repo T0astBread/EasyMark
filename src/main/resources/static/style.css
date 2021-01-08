@@ -310,6 +310,14 @@ form.add {
     background: #ccc;
 }
 
+#page-courses-grading th.assignment-header {
+	padding-top: .2em;
+}
+
+#page-courses-grading th.assignment-header .max-score-label {
+	font-size: .8em;
+}
+
 #page-courses-grading tfoot,
 #page-courses-grading thead {
     position: relative;
