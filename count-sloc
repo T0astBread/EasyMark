@@ -1,6 +1,5 @@
 #!/bin/sh
-find src integration-tests \
-	-path integration-tests/node_modules -prune -false -o \( \
+find src \( \
 	-type f \
 	-name "*.java" \
 	-o -name "*.html" \
