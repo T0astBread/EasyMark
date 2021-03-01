@@ -14,15 +14,17 @@ public class DBMS {
     private static Database database = new Database();
 
     public static DatabaseHandle openRead() {
+        long takeTime = System.nanoTime();
         Lock lock = dbLock.readLock();
         lock.lock();
-        return new DatabaseHandle(lock, database);
+        return new DatabaseHandle(lock, database, takeTime);
     }
 
     public static DatabaseHandle openWrite() {
+        long takeTime = System.nanoTime();
         Lock lock = dbLock.writeLock();
         lock.lock();
-        return new DatabaseHandle(lock, database);
+        return new DatabaseHandle(lock, database, takeTime);
     }
 
     public static void load() throws IOException {
