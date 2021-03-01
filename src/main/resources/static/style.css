@@ -96,15 +96,23 @@ form.add {
     cursor: pointer;
 }
 
-.form-toggle + label + form {
+.grid-form .form-toggle + label > * {
+	margin-top: 0;
+	margin-bottom: 0;
+}
+
+.form-toggle + label + form,
+.form-toggle + label + .form-toggle-form {
     display: none;
 }
 
-.form-toggle + label + form {
+.form-toggle + label + form,
+.form-toggle + label + .form-toggle-form {
     display: none;
 }
 
-.form-toggle:checked + label + form {
+.form-toggle:checked + label + form,
+.form-toggle:checked + label + .form-toggle-form {
     display: inline-block;
     margin-left: 0;
 }
@@ -216,6 +224,33 @@ form.add {
     text-transform: uppercase;
     font-weight: bold;
     color: #d70071;
+}
+
+.grid-form {
+	max-width: var(--grid-form-maxwidth, 40rem);
+	margin: 1rem;
+	display: grid;
+	grid-template-columns: var(--grid-form-col1, 10em) 1fr;
+}
+
+.grid-form > * {
+	margin-bottom: .5rem;
+}
+
+.grid-form > ul {
+	margin-top: 0;
+}
+
+.grid-form > .grid-form-nospace {
+	margin-bottom: 0;
+}
+
+.grid-form > .grid-form-topspace {
+	margin-top: 1rem;
+}
+
+.grid-form > .grid-form-fullwidth {
+	grid-column: span 2;
 }
 
 #page-index-admin main {

@@ -1,7 +1,10 @@
 {% extends "../partials/page.peb" %}
 
 {% block content %}
-<form action="/assignments/{{ assignment.getID() }}" method="post" accept-charset="utf-8">
+<form action="/assignments/{{ assignment.getID() }}"
+    method="post"
+    accept-charset="utf-8"
+    class="grid-form">
     <label for="name">Name: </label>
     <input id="name"
         name="name"
@@ -24,7 +27,9 @@
         name="redirectUrl"
         value="{{ redirectUrl }}"/>
     {% include "../partials/csrf-input.peb" %}
-    <a href="{{ backUrl }}">Back</a>
-    <button type="submit">Save</button>
+    <div class="grid-form-fullwidth grid-form-topspace">
+        <a href="{{ backUrl }}">Back</a>
+        <button type="submit">Save</button>
+    </div>
 </form>
 {% endblock %}
