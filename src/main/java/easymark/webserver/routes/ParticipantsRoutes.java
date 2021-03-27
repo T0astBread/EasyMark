@@ -79,7 +79,12 @@ public class ParticipantsRoutes {
                     .map(Session::getId)
                     .forEach(sessionManager::revoke);
 
-            String rawName = Cryptography.decryptData(participant.getName(), participant.getNameSalt(), uek);
+            String rawName;
+            try {
+                rawName = Cryptography.decryptData(participant.getName(), participant.getNameSalt(), uek);
+            } catch (Exception e) {
+                rawName = "[decryption failure]";
+            }
             String redirectUrl = ctx.formParam(FormKeys.REDIRECT_URL);
             session.setNameDisplay(rawName);
             session.setAtDisplay(rawCat);
