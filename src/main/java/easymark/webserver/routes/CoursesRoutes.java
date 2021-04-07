@@ -230,13 +230,13 @@ public class CoursesRoutes {
                         .filter(chapter -> chapter.getCourseId().equals(courseId))
                         .sorted(Comparator.comparingInt(Chapter::getOrdNum))
                         .peek(chapter -> {
-                            List<Assignment> assignmentsForParticipant = db.get().getAssignments()
+                            List<Assignment> assignmentsForChapter = db.get().getAssignments()
                                     .stream()
                                     .filter(assignment -> assignment.getChapterId().equals(chapter.getId()))
                                     .sorted(Comparator.comparingInt(assignment -> assignment.getOrdNum() == -2 ? Integer.MAX_VALUE : assignment.getOrdNum()))
                                     .collect(Collectors.toUnmodifiableList());
-                            assignments.addAll(assignmentsForParticipant);
-                            assignmentsPerChapter.put(chapter.getId(), assignmentsForParticipant);
+                            assignments.addAll(assignmentsForChapter);
+                            assignmentsPerChapter.put(chapter.getId(), assignmentsForChapter);
                         })
                         .collect(Collectors.toUnmodifiableList());
 
