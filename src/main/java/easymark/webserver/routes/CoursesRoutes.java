@@ -228,6 +228,7 @@ public class CoursesRoutes {
                 chapters = db.get().getChapters()
                         .stream()
                         .filter(chapter -> chapter.getCourseId().equals(courseId))
+                        .sorted(Comparator.comparingInt(Chapter::getOrdNum))
                         .peek(chapter -> {
                             List<Assignment> assignmentsForParticipant = db.get().getAssignments()
                                     .stream()
@@ -237,7 +238,6 @@ public class CoursesRoutes {
                             assignments.addAll(assignmentsForParticipant);
                             assignmentsPerChapter.put(chapter.getId(), assignmentsForParticipant);
                         })
-                        .sorted(Comparator.comparingInt(Chapter::getOrdNum))
                         .collect(Collectors.toUnmodifiableList());
 
                 assignmentResultsPerAssignmentPerParticipant = new HashMap<>();
