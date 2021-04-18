@@ -33,7 +33,8 @@ public class ParticipantsRoutes {
                 ctx.render("pages/participants_create.peb", Map.of(
                         ModelKeys.REDIRECT_URL, redirectUrl == null ? "/" : redirectUrl,
                         ModelKeys.NAME, name,
-                        ModelKeys.NEW_AT, cat
+                        ModelKeys.NEW_AT, cat,
+                        ModelKeys.CSRF_TOKEN, makeCSRFToken(ctx)
                 ));
             } catch (Exception e) {
                 throw new BadRequestResponse("Parameters expired");
